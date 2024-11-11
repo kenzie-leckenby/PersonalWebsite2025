@@ -1,6 +1,6 @@
 {
-  "name": "material-ui-remix-ts",
-  "version": "5.0.0",
+  "name": "personal-website-2025",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "remix build",
