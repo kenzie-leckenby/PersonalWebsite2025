@@ -7,14 +7,13 @@ export default function Copyright() {
     <Typography
       variant="body2"
       align="center"
+
       sx={{
         color: 'text.secondary',
       }}
     >
       {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
+      Kenzie Leckenby
       {new Date().getFullYear()}.
     </Typography>
   );

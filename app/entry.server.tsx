@@ -3,7 +3,7 @@ import * as ReactDOMServer from 'react-dom/server';
 import { RemixServer } from '@remix-run/react';
 import type { EntryContext } from '@remix-run/node';
 import createEmotionCache from './src/createEmotionCache';
-import theme from './src/theme';
+import darkTheme from './src/theme';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 import { CacheProvider } from '@emotion/react';
@@ -21,7 +21,7 @@ export default function handleRequest(
   function MuiRemixServer() {
     return (
       <CacheProvider value={cache}>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={darkTheme}>
           {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
           <CssBaseline />
           <RemixServer context={remixContext} url={request.url} />

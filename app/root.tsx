@@ -11,7 +11,7 @@ import {
 } from '@remix-run/react';
 import { withEmotionCache } from '@emotion/react';
 import { unstable_useEnhancedEffect as useEnhancedEffect } from '@mui/material';
-import theme from './src/theme';
+import darkTheme from './src/theme';
 import ClientStyleContext from './src/ClientStyleContext';
 import Layout from './src/Layout';
 
@@ -43,7 +43,7 @@ const Document = withEmotionCache(({ children, title }: DocumentProps, emotionCa
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <meta name="theme-color" content={theme.palette.primary.main} />
+        <meta name="theme-color" content={darkTheme.palette.primary.main} />
         {title ? <title>{title}</title> : null}
         <Meta />
         <Links />
@@ -51,7 +51,7 @@ const Document = withEmotionCache(({ children, title }: DocumentProps, emotionCa
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,100..900;1,100..900&display=swap"
         />
         <meta name="emotion-insertion-point" content="emotion-insertion-point" />
       </head>

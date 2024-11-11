@@ -6,7 +6,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import ClientStyleContext from './src/ClientStyleContext';
 import createEmotionCache from './src/createEmotionCache';
-import theme from './src/theme';
+import darkTheme from './src/theme';
 
 interface ClientCacheProviderProps {
   children: React.ReactNode;
@@ -35,7 +35,7 @@ const hydrate = () => {
     ReactDOM.hydrateRoot(
       document,
       <ClientCacheProvider>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={darkTheme}>
           {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
           <CssBaseline />
           <RemixBrowser />
