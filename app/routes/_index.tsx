@@ -15,7 +15,7 @@ export const meta: MetaFunction = () => [
 
 
 function InterestBuffet() {
-  const interests = ['graphics enthusiast', 'hobby bookbinder', 'college student', 'game modder', 'rocket nerd'];
+  const interests = ['graphics nerd', 'hobby bookbinder', 'college student', 'game modder', 'space lover'];
 
   const typeSpeed = 100;
   const deleteSpeed = 50;

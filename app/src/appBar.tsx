@@ -73,7 +73,7 @@ function MenuSpeedDial() {
         endIcon={<KeyboardArrowDownIcon />}
       >
         <Typography variant="h6">
-          Navigate
+          Menu
         </Typography>
       </Button>
       <Menu
