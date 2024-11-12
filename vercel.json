@@ -2,7 +2,7 @@
     "rewrites": [
       {
         "source": "/(.*)",
-        "destination": "https://personal-website2025.vercel.app/"
+        "destination": "https://personal-website2025.vercel.app/$1"
       }
     ]
   }
