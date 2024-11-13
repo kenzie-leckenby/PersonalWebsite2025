@@ -29,7 +29,7 @@ const menuItems = [
   {name: 'Projects', link: '/projects'}
 ];
 
-function MenuSpeedDial() {
+function DropDownMenu() {
   const navigate = useNavigate();
   const buttonRef = React.useRef<HTMLButtonElement | null>(null);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -129,7 +129,7 @@ function ResponsiveAppBar() {
               Kenzie Leckenby
             </Typography>
           </div>
-          <MenuSpeedDial></MenuSpeedDial>
+          <DropDownMenu></DropDownMenu>
         </Toolbar>
       </Container>
     </AppBar>

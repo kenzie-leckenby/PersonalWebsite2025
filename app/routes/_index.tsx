@@ -80,51 +80,7 @@ export default function Index() {
   return (
     <React.Fragment>
       <Container disableGutters maxWidth='xl' sx={{
-        display: { xs: 'none', sm: 'none' ,md: 'none', lg: 'none', xl: 'grid' },
-        mt: 16,
-      }}>
-        <Typography variant="h2" component="h1" sx={{
-          fontWeight: 500,
-          pb: 3,
-          mb: 4,
-          borderBottom: `2px solid ${darkTheme.palette.divider}`,
-        }}>
-          Hello World! <br />
-          I'm Kenzie Leckenby <br />
-          <InterestBuffet></InterestBuffet>
-        </Typography>
-        <Typography variant='h4'>
-          I'm a computer science major at George Mason Univeristy with an acute interest in Graphics Computing and a love of Virtual Reality.
-          Who is finally giving some love to their poor website which has been negelected since I first learned html and css.
-        </Typography>
-      </Container>
-
-
-
-      <Container disableGutters maxWidth='lg' sx={{
-        display: { xs: 'none', sm: 'none' ,md: 'none', lg: 'grid', xl: 'none' },
-        mt: 16,
-      }}>
-        <Typography variant="h2" component="h1" sx={{
-          fontWeight: 500,
-          pb: 3,
-          mb: 4,
-          borderBottom: `2px solid ${darkTheme.palette.divider}`,
-        }}>
-          Hello World! <br />
-          I'm Kenzie Leckenby <br />
-          <InterestBuffet></InterestBuffet>
-        </Typography>
-        <Typography variant='h4'>
-          I'm a computer science major at George Mason Univeristy with an acute interest in Graphics Computing and a love of Virtual Reality.
-          Who is finally giving some love to their poor website which has been negelected since I first learned html and css.
-        </Typography>
-      </Container>
-
-
-
-      <Container disableGutters maxWidth='md' sx={{
-        display: { xs: 'none', sm: 'none' ,md: 'grid', lg: 'none', xl: 'none' },
+        display: { xs: 'none', sm: 'none' ,md: 'grid'},
         mt: 16,
       }}>
         <Typography variant="h2" component="h1" sx={{
