@@ -13,7 +13,7 @@ const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, 
     return (
       <Box
         component={Link}
-        to={link}
+        to={`/japanese-resources/${link}`}
         sx={{
           textDecoration: 'none',
           border: `1px solid ${darkTheme.palette.divider}`,
@@ -31,12 +31,12 @@ const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, 
           cursor: 'pointer',
         }}
       >
-        {/* Blog Title */}
+        {/* Resource Title */}
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: darkTheme.palette.primary.main }}>
           {title}
         </Typography>
 
-        {/* Blog Synopsis */}
+        {/* Resource Synopsis */}
         <Typography variant="body2" sx={{ color: darkTheme.palette.text.primary }}>
           {synopsis}
         </Typography>
