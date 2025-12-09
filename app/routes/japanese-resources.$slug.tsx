@@ -16,11 +16,20 @@ export async function loader({ params }: LoaderFunctionArgs) {
   return { html };
 }
 
-export default function BlogPostPage() {
+export default function ResourcePage() {
   const { html } = useLoaderData<typeof loader>();
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-      <div dangerouslySetInnerHTML={{ __html: html }} />
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }} disableGutters>
+      <iframe
+        src={`/japanese-resources/${html}.html`}
+        style={{
+          width: "100%",
+          height: "90vh",
+          border: "none",
+          background: "white",
+        }}
+      />
     </Container>
   );
 }
