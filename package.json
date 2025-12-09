@@ -20,13 +20,19 @@
     "@remix-run/react": "latest",
     "@remix-run/serve": "latest",
     "@remix-run/server-runtime": "latest",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
     "@remix-run/dev": "latest",
+    "@types/markdown-it": "^14.1.2",
+    "@types/marked": "^6.0.0",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "typescript": "latest"
   },
   "engines": {
