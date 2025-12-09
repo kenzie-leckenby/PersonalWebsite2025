@@ -3,15 +3,13 @@ import { Link } from '@remix-run/react';
 import { Box, Typography, Chip } from '@mui/material';
 import darkTheme from './theme';
 
-interface BlogThumbnailProps {
+interface ResourceThumbnailProps {
     title: string;
-    date: string;
     synopsis: string;
-    tags: string[];
     link: string;
 }
 
-const BlogThumbnail: React.FC<BlogThumbnailProps> = ({ title, date, synopsis, tags, link }) => {
+const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, link }) => {
     return (
       <Box
         component={Link}
@@ -37,35 +35,12 @@ const BlogThumbnail: React.FC<BlogThumbnailProps> = ({ title, date, synopsis, ta
           {title}
         </Typography>
 
-        {/* Blog Date */}
-        <Typography variant="subtitle2" sx={{ color: darkTheme.palette.text.secondary }}>
-          {date}
-        </Typography>
-
         {/* Blog Synopsis */}
         <Typography variant="body2" sx={{ color: darkTheme.palette.text.primary }}>
           {synopsis}
         </Typography>
-
-        {/* Tags Section */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, marginTop: 1 }}>
-          {tags.map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              variant="outlined"
-              sx={{
-                borderColor: darkTheme.palette.primary.main,
-                color: darkTheme.palette.primary.main,
-                '&:hover': {
-                  backgroundColor: darkTheme.palette.action.hover,
-                },
-              }}
-            />
-          ))}
-        </Box>
       </Box>
     );
   };
 
-  export default BlogThumbnail;
+  export default ResourceThumbnail;

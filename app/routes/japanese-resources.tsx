@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from '@remix-run/react';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import BlogThumbnail from '~/src/blogThumbnail';
+import ResourceThumbnail from '~/src/resourceThumbnail';
 import { Container } from '@mui/material';
 import darkTheme from '~/src/theme';
 
@@ -17,9 +17,13 @@ export default function About() {
           fontWeight: 500,
           borderBottom: `2px solid ${darkTheme.palette.divider}`
         }}>
-          A List Of All The Random HTML's Provided By ケンせんせい
+          Random HTML's Provided By ケンせんせい
         </Typography>
-        <BlogThumbnail title='Genki Listening Exercises' date='2:08pm - November 12, 2024' synopsis='Wow I be yappin' tags={['C#', 'Yap']}></BlogThumbnail>
+        <ResourceThumbnail title='Genki Listening Exercises' synopsis='Wow I be yappin' link={'Genki-Listening-Exercises'}></ResourceThumbnail>
+        <ResourceThumbnail title='Japanese Mahjong'  synopsis='Wow I be yappin' link={'Japanese-Mahjong'}></ResourceThumbnail>
+        <ResourceThumbnail title='Japanese Read Aloud Trainer' synopsis='Wow I be yappin' link={'Japanese-Read-Aloud-Trainer'}></ResourceThumbnail>
+        <ResourceThumbnail title='Lesson 6 BuyoBuyo Vocab Game' synopsis='Wow I be yappin' link={'Lesson-6-BuyoBuyo-Vocab-Game'}></ResourceThumbnail>
+        <ResourceThumbnail title='Lesson 1-6 Vocab Game' synopsis='Wow I be yappin' link={'Lesseon1-6-Vocab-Game'}></ResourceThumbnail>
       </Container>
     </React.Fragment>
   );
