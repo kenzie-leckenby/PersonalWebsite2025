@@ -13,7 +13,7 @@ const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, 
     return (
       <Box
         component={Link}
-        to={link}
+        to={`japanese-resources/${link}`}
         sx={{
           border: `1px solid ${darkTheme.palette.divider}`,
           borderRadius: '8px',

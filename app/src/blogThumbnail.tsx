@@ -17,6 +17,7 @@ const BlogThumbnail: React.FC<BlogThumbnailProps> = ({ title, date, synopsis, ta
         component={Link}
         to={link}
         sx={{
+          textDecoration: 'none',
           border: `1px solid ${darkTheme.palette.divider}`,
           borderRadius: '8px',
           padding: 2,
