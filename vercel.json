@@ -1,12 +1,1 @@
-{
-  "rewrites": [
-    {
-      "source": "/japanese-resources-htmls/:path*",
-      "destination": "/japanese-resources-htmls/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "https://personal-website2025.vercel.app/$1"
-    }
-  ]
-}
+{}
