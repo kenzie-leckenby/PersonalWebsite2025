@@ -10,15 +10,6 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
-  const filePath = path.join(process.cwd(), "public", "japanese-resources-htmls", `${params.slug}.html`);
-  await fs.access(filePath);
-
-  try {
-    await fs.access(filePath);
-  } catch {
-    throw new Response("Not found", { status: 404 });
-  }
-
   return { slug};
 }
 
