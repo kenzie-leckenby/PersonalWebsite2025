@@ -9,7 +9,7 @@ import path from 'path';
 import matter from 'gray-matter';
 
 export async function loader() {
-  const blogDir = path.join(process.cwd(), 'content', 'blog');
+  const blogDir = path.join(process.cwd(), 'public','content', 'blog');
 
   try {
     const files = await fs.readdir(blogDir);

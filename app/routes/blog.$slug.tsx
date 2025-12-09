@@ -30,7 +30,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
 
   try {
     // Read the markdown file
-    const filePath = path.join(process.cwd(), "content", "blog", `${slug}.md`);
+    const filePath = path.join(process.cwd(), "public", "content", "blog", `${slug}.md`);
     const fileContent = await fs.readFile(filePath, "utf-8");
 
     // Parse frontmatter and content
