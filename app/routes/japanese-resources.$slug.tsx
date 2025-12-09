@@ -11,18 +11,18 @@ export async function loader({ params }: LoaderFunctionArgs) {
   }
 
   const filePath = path.join(process.cwd(), "app/japanese-resources-htmls", `${params.slug}.html`);
-  const html = await fs.readFile(filePath, "utf-8");
+  await fs.access(filePath);
 
-  return { html };
+  return { slug};
 }
 
 export default function ResourcePage() {
-  const { html } = useLoaderData<typeof loader>();
+  const { slug } = useLoaderData<typeof loader>();
 
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }} disableGutters>
       <iframe
-        src={`/japanese-resources/${html}.html`}
+        src={`/japanese-resources/${slug}.html`}
         style={{
           width: "100%",
           height: "90vh",
