@@ -8,5 +8,14 @@
       "source": "/(.*)",
       "destination": "https://personal-website2025.vercel.app/$1"
     }
+  ],
+
+  "buildCommand": "remix build",
+  "outputDirectory": "public",
+  "routes": [
+    {
+      "src": "/japanese-resources-htmls/(.*)",
+      "dest": "/japanese-resources-htmls/$1"
+    }
   ]
 }

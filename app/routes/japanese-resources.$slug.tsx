@@ -10,6 +10,10 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
+  if (slug.includes('/') || slug.includes('..')) {
+    throw new Response("Invalid slug", { status: 400 });
+  }
+
   return { slug};
 }
 
