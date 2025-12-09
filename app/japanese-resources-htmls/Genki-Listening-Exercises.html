@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Genki I Review Practice — L1–6 (101 Q) — Listening Exercise</title>
+<style>
+  :root{--accent:#0b63c6;--muted:#6b7b8c}
+  body{font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;margin:0;background:#f7fbff;color:#07203a}
+  header{background:var(--accent);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:18px}
+  .wrap{display:flex;gap:14px;padding:16px}
+  nav{width:260px}
+  main{flex:1}
+  button{background:var(--accent);color:#fff;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+  button.ghost{background:#fff;color:var(--accent);border:1px solid #cfe0ff}
+  .panel{background:#fff;padding:14px;border-radius:8px;box-shadow:0 6px 18px rgba(11,99,198,0.04);margin-bottom:12px}
+  h2{margin:0 0 8px 0}
+  .small{font-size:13px;color:var(--muted)}
+  .tts{background:#0b63c6;color:#fff;border-radius:5px;padding:4px 8px;margin-left:8px;cursor:pointer}
+  .question{margin:12px 0;padding:10px;border-radius:6px;background:#fbfdff;border:1px solid #eef6ff; min-height: 180px; }
+  
+/* --- NEW/MODIFIED STYLES FOR LAYOUT --- */
+
+
+/* Horizontal Choices */
+.choice-group {
+    display: flex;
+    flex-wrap: wrap; /* Allows choices to wrap if space is limited */
+    gap: 12px;
+    margin-top: 8px;
+}
+.choice {
+    display: flex; 
+    align-items: center;
+    margin: 0; 
+    /* Ensures ruby elements inside are treated as text block */
+    white-space: nowrap; 
+}
+.choice input[type="radio"] {
+    margin-right: 4px;
+}
+
+/* Furigana Size Adjustment */
+rt {
+    font-size: 80%; /* Makes the furigana 80% the size of the main text */
+}
+
+/* Question Grid */
+.listening-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Default 3 columns */
+    gap: 12px;
+}
+
+/* --- EXISTING STYLES (kept for completeness) --- */
+  .match-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .match-slot{background:#fff;padding:10px;border-radius:8px;border:1px solid #e6f0fb;min-height:56px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+  .match-jp{font-weight:700;margin-bottom:8px}
+  .dropzone{flex:1;width:100%;min-height:36px;border:1px dashed #dfe8fb;border-radius:6px;padding:6px;background:#fbfeff}
+  .tile-pool{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:#fbfdff;border-radius:6px;border:1px solid #eef6ff;min-height:80px}
+  .tile{padding:8px 10px;border-radius:6px;background:#e8f3ff;border:1px solid #cfe6ff;cursor:grab}
+  .tile.dragging{opacity:0.4}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .score{font-weight:700;color:var(--accent);margin-left:8px}
+  .hidden{display:none}
+  footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
+span.tts {
+  display: inline-block;
+  border: 1px solid #ff99cc;  /* light blue #99ccff& lightpick is #ff99cc*/
+  border-radius: 8px;
+  padding: 4px 10px;
+  background-color: #f9f9f9;
+  box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+  @media (max-width:1200px){ 
+    .listening-grid{grid-template-columns:repeat(2,1fr)} /* 2 columns on mid screens */
+  }
+  @media (max-width:700px){ 
+    .listening-grid{grid-template-columns:repeat(1,1fr)} /* 1 column on small screens */
+  }
+  @media (max-width:1000px){ 
+    .match-grid{grid-template-columns:repeat(1,1fr)} 
+    /* nav {display:none} - Removing section button is handled by removing section list*/
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Genki I Final Review — L1–6 (101 Q)</h1>
+  <div>
+    <button id="btnReset" class="ghost" onclick="resetAnswers()">Reset answers</button>
+    <button id="btnShowKey" onclick="showKey()">Show Answer Key</button>
+  </div>
+</header>
+
+<div style="display:flex;gap:16px;padding:16px">
+    <nav style="width:260px">
+    <div class="panel">
+      <h2>🔊 TTS Settings</h2>
+      
+      <div style="margin-bottom: 15px;">
+        <label for="rate">Speed (<span id="rateValue">1.0</span>)</label>
+        <input type="range" id="rate" min="0.5" max="2" value="1.0" step="0.1" 
+          style="width: 100%;" oninput="document.getElementById('rateValue').textContent = this.value"/>
+      </div>
+      
+      <div>
+        <label for="pitch">Pitch (<span id="pitchValue">1.0</span>)</label>
+        <input type="range" id="pitch" min="0" max="2" value="1.0" step="0.1" 
+          style="width: 100%;" oninput="document.getElementById('pitchValue').textContent = this.value"/>
+      </div>
+      
+      <p class="small" style="margin-top: 15px;">Tips: Click ▶ to hear Japanese (browser TTS).</p>
+    </div>
+  </nav>
+
+  <main style="flex:1">
+    
+        <div id="listPanel" class="panel">
+      <h2>Listening (101 Q)</h2>
+      <div id="listeningList"></div>
+      <div style="margin-top:10px">
+        <button id="btnSubmitList" onclick="submitListAnswers()">Submit Listening</button>
+        <span id="listScore" class="score"></span>
+      </div>
+    </div>
+
+        <div id="answerKeyPanel" class="panel hidden">
+      <h2>Answer Key (Teacher)</h2>
+      <div id="keyContent" style="background:#fff;padding:10px;border-radius:6px;border:1px dashed #dfefff;"></div>
+      <div style="margin-top:8px">
+        <button onclick="hideKey()">Hide Key</button>
+      </div>
+    </div>
+  </main>
+</div>
+<hr>
+<footer>Editable — You can open this HTML in a text editor and edit arrays in the &lt;script&gt; if you want to change questions. The Furigana may not be accurate. You can update the dataset accordingly</footer><footer> This exercise is designed and created by Ken Tseng, George Mason University, Japanese Program, and co-coded by ChatGPT and Gemini。Please disregard our typo if any.</footer>
+
+<script>
+let jpVoice = null;
+
+function loadVoices() {
+  const voices = speechSynthesis.getVoices();
+
+  // 1. Try to find Microsoft Sayaka
+  jpVoice = voices.find(v => 
+      v.name.includes("Sayaka") || v.name.includes("Sayaka Online")
+  );
+
+  // 2. If not found, choose first Japanese voice
+  if (!jpVoice) {
+    jpVoice = voices.find(v => v.lang === "ja-JP");
+  }
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+/* -------------------- DATA -------------------- */
+const listeningData = [
+  {
+    sent:'きのう、ろくじにおきました。',
+    q:'何時におきましたか。',
+    choices:['五時','六時','七時','八時'],
+    a:1
+  },
+  {
+    sent:'今日は、友だちとカフェで、べんきょうします。',
+    q:'どこでべんきょうしますか。',
+    choices:['うち','カフェ','としょかん','レストラン'],
+    a:1
+  },
+  {
+    sent:'あした、日本語のテストがあります。',
+    q:'あした何がありますか。',
+    choices:['アルバイト','テスト','スポーツ','旅行'],
+    a:1
+  },
+  {
+    sent:'メアリーさんは毎日コーヒーを飲みます。',
+    q:'メアリーさんは何を飲みますか。',
+    choices:['お茶','ジュース','コーヒー','水'],
+    a:2
+  },
+  {
+    sent:'たけしさんは昨日、三時間べんきょうしました。',
+    q:'どれくらいべんきょうしましたか。',
+    choices:['一時間','二時間','三時間','四時間'],
+    a:2
+  },
+  {
+    sent:'先週、レストランでパスタを食べました。',
+    q:'何を食べましたか。',
+    choices:['ラーメン','パスタ','すし','ピザ'],
+    a:1
+  },
+  {
+    sent:'わたしはよく、でんしゃで大学に行きます。',
+    q:'どうやって大学に行きますか。',
+    choices:['歩いて','バスで','電車で','車で'],
+    a:2
+  },
+  {
+    sent:'今日の天気は雨です。',
+    q:'どんな天気ですか。',
+    choices:['晴れ','雪','雨','くもり'],
+    a:2
+  },
+  {
+    sent:'日曜日に母に会いました。',
+    q:'誰に会いましたか。',
+    choices:['友だち','母','先生','兄'],
+    a:1
+  },
+  {
+    sent:'今日は、数学のクラスがありません。',
+    q:'今日は何のクラスがありませんか。',
+    choices:['英語','日本語','数学','歴史'],
+    a:2
+  },
+  {
+    sent:'私は毎朝、しちじに朝ごはんを食べます。',
+    q:'朝ごはんは何時に食べますか。',
+    choices:['六時','七時','八時','九時'],
+    a:1
+  },
+  {
+    sent:'きのう公園で、しゃしんをとりました。',
+    q:'どこで写真をとりましたか。',
+    choices:['学校','うち','公園','駅'],
+    a:2
+  },
+  {
+    sent:'弟は高校生です。',
+    q:'弟は何ですか。',
+    choices:['中学生','高校生','大学生','会社員'],
+    a:1
+  },
+  {
+    sent:'土曜日に友だちと映画を見ました。',
+    q:'何を見ましたか。',
+    choices:['ドラマ','写真','映画','ニュース'],
+    a:2
+  },
+  {
+    sent:'私は日本語がすこしわかります。',
+    q:'何がわかりますか。',
+    choices:['英語','中国語','日本語','韓国語'],
+    a:2
+  },
+  {
+    sent:'あしたはアルバイトがありますう。',
+    q:'あした何がありますか。',
+    choices:['テスト','学校','アルバイト','じゅぎょう'],
+    a:2
+  },
+  {
+    sent:'昨日の夜、にほんごをれんしゅうしました。',
+    q:'何をれんしゅうしましたか。',
+    choices:['えいご','にほんご','うんどう','料理'],
+    a:1
+  },
+  {
+    sent:'私はよく、九時ごろ寝ます。',
+    q:'何時ごろ寝ますか。',
+    choices:['七時','八時','九時','十時'],
+    a:2
+  },
+  {
+    sent:'メアリーさんは、犬が好きです。',
+    q:'何が好きですか。',
+    choices:['猫','犬','魚','鳥'],
+    a:1
+  },
+  {
+    sent:'今日は、スーパーで食べ物を買います。',
+    q:'どこで買いますか。',
+    choices:['レストラン','家','スーパー','学校'],
+    a:2
+  },
+  {
+    sent:'たけしさんは毎週う金曜日にスポーツをします。',
+    q:'いつスポーツをしますか。',
+    choices:['月曜日','水曜日','金曜日','土曜日'],
+    a:2
+  },
+  {
+    sent:'私はクラスの前に、コーヒーをのみますう。',
+    q:'いつコーヒーをのみますか。',
+    choices:['クラスの前','クラスのあと','夜','朝ごはんのあと'],
+    a:0
+  },
+  {
+    sent:'きのうはとてもさむかったです。',
+    q:'どんな日でしたか。',
+    choices:['あつかった','さむかった','すずしかった','あたたかかった'],
+    a:1
+  },
+  {
+    sent:'妹はよくスマホで音楽を聞きます。',
+    q:'何で音楽を聞きますか。',
+    choices:['パソコン','テレビ','スマホ','ラジオ'],
+    a:2
+  },
+  {
+    sent:'日曜日にこうえんでさんぽしました。',
+    q:'どこでさんぽしましたか。',
+    choices:['学校','家','こうえん','駅'],
+    a:2
+  },
+  {
+    sent:'来週、父が東京に来ます。',
+    q:'来週だれが東京に来ますか。',
+    choices:['母','父','弟','友だち'],
+    a:1
+  },
+  {
+    sent:'私は毎朝、ニュースを見ます。',
+    q:'何を見ますか。',
+    choices:['ゲーム','ニュース','アニメ','映画'],
+    a:1
+  },
+  {
+    sent:'今日はにぎやかなレストランで、昼ごはんを食べました。',
+    q:'どんなレストランですか。',
+    choices:['しずかな','にぎやかな','小さい','高い'],
+    a:1
+  },
+  {
+    sent:'金曜日に、友だちと日本語をれんしゅうします。',
+    q:'金曜日に何をしますか。',
+    choices:['スポーツ','アルバイト','日本語のれんしゅう','映画'],
+    a:2
+  },
+  {
+    sent:'昨日は雨でしたから、家にいました。',
+    q:'どうして家にいましたか。',
+    choices:['ひまだから','雨だったから','ねむかったから','寒かったから'],
+    a:1
+  },
+  {
+    sent:'私はよく、夜にジョギングをします。',
+    q:'いつジョギングをしますか。',
+    choices:['朝','昼','夜','週末だけ'],
+    a:2
+  },
+  {
+    sent:'昨日、駅で先生に会いました。',
+    q:'どこで先生に会いましたか。',
+    choices:['学校','駅','家','スーパー'],
+    a:1
+  },
+  {
+    sent:'来月、日本に旅行します。',
+    q:'どこに旅行しますか。',
+    choices:['アメリカ','日本','韓国','中国'],
+    a:1
+  },
+  {
+    sent:'今日は、あまりじかんがありません。',
+    q:'何がありませんか。',
+    choices:['お金','時間','宿題','天気'],
+    a:1
+  },
+  {
+    sent:'私は毎日、ニュースを聞きます。',
+    q:'何を聞きますか。',
+    choices:['音楽','ニュース','英語','ラジオ'],
+    a:1
+  },
+  {
+    sent:'週末はよく、家で映画を見ます。',
+    q:'週末に何をしますか。',
+    choices:['ゲーム','映画を見る','買い物','料理をする'],
+    a:1
+  },
+  {
+    sent:'たけしさんは公園で、しゃしんをたくさんとりました。',
+    q:'どこで写真をとりましたか。',
+    choices:['駅','学校','公園','家'],
+    a:2
+  },
+  {
+    sent:'メアリーさんはにほんごのクラスが、二つあります。',
+    q:'クラスはいくつありますか。',
+    choices:['一つ','二つ','三つ','四つ'],
+    a:1
+  },
+  {
+    sent:'今日は、とてもいそがしいです。',
+    q:'どんな日ですか。',
+    choices:['ひま','いそがしい','しずか','あぶない'],
+    a:1
+  },
+  {
+    sent:'きのうカフェで、ケーキを食べました。',
+    q:'何を食べましたか。',
+    choices:['パン','ケーキ','アイス','カレー'],
+    a:1
+  },
+  {
+    sent:'私はよく、土曜日に買い物をします。',
+    q:'いつ買い物をしますか。',
+    choices:['月曜日','水曜日','土曜日','日曜日'],
+    a:2
+  },
+  {
+    sent:'明日、友だちがうちに来ます。',
+    q:'明日だれが来ますか。',
+    choices:['母','友だち','先生','兄'],
+    a:1
+  },
+  {
+    sent:'今日は、大学でテストがあります。',
+    q:'どこでテストがありますか。',
+    choices:['会社','家','大学','デパート'],
+    a:2
+  },
+  {
+    sent:'私は、魚があまり好きじゃないです。',
+    q:'何が好きじゃないですか。',
+    choices:['肉','魚','さやい','くだもの'],
+    a:1
+  },
+  {
+    sent:'きのうは、とてもねむかったです。',
+    q:'どんな日でしたか。',
+    choices:['たのしかった','ねむかった','さむかった','いそがしかった'],
+    a:1
+  },
+  {
+    sent:'今週、宿題がたくさんあります。',
+    q:'何がありますか。',
+    choices:['パーティー','宿題','雨','旅行'],
+    a:1
+  },
+  {
+    sent:'兄は、あしたアメリカに帰ります。',
+    q:'兄はどこに帰りますか。',
+    choices:['日本','アメリカ','カナダ','イギリス'],
+    a:1
+  },
+  {
+    sent:'私は毎朝、バナナを食べます。',
+    q:'何を食べますか。',
+    choices:['りんご','みかん','バナナ','ぶどう'],
+    a:2
+  },
+  {
+    sent:'たけしさんは、水曜日にアルバイトがあります。',
+    q:'アルバイトはいつですか。',
+    choices:['月曜日','火曜日','水曜日','金曜日'],
+    a:2
+  },
+  {
+    sent:'メアリーさんはよく、音楽を聞きます。',
+    q:'何をよく聞きますか。',
+    choices:['ニュース','音楽','ラジオ','アニメ'],
+    a:1
+  },
+  {
+    sent:'今日は、とてもあたたかいです。',
+    q:'どんな天気ですか。',
+    choices:['あたたかい','さむい','あつい','すずしい'],
+    a:0
+  },
+  {
+    sent:'私の父は会社員です。',
+    q:'父は何ですか。',
+    choices:['高校生','先生','会社員','大学生'],
+    a:2
+  },
+  {
+    sent:'きのう、大学で友だちと話しました。',
+    q:'どこで話しましたか。',
+    choices:['うち','大学','店','駅'],
+    a:1
+  },
+  {
+    sent:'私は来週、海に行きたいです。',
+    q:'どこに行きたいですか。',
+    choices:['山','川','海','森'],
+    a:2
+  },
+  {
+    sent:'昨日は、とてもいい天気でした。',
+    q:'どんな天気でしたか。',
+    choices:['雨','雪','いい天気','くもり'],
+    a:2
+  },
+  {
+    sent:'土曜日はアルバイトがありません。',
+    q:'土曜日に何がありませんか。',
+    choices:['テスト','クラス','アルバイト','宿題'],
+    a:2
+  },
+  {
+    sent:'たなかさんは、テレビを二時間見ました。',
+    q:'どれくらいテレビを見ましたか。',
+    choices:['一時間','二時間','三時間','四時間'],
+    a:1
+  },
+  {
+    sent:'あした、こうえんで友だちに会います。',
+    q:'どこで友だちに会いますか。',
+    choices:['駅','家','こうえん','レストラン'],
+    a:2
+  },
+  {
+    sent:'私は、なつがあまり好きじゃないです。',
+    q:'何が好きじゃないですか。',
+    choices:['春','夏','秋','冬'],
+    a:1
+  },
+  {
+    sent:'きのう、スーパーでくだものを買いました。',
+    q:'どこで買いましたか。',
+    choices:['デパート','スーパー','コンビニ','駅'],
+    a:1
+  },
+  {
+    sent:'私は、よくコーヒーをのみます。',
+    q:'何をよくのみますか。',
+    choices:['おちゃ','コーヒー','ジュース','みず'],
+    a:1
+  },
+  {
+    sent:'きのうは、十時間ねました。',
+    q:'どれくらいねましたか。',
+    choices:['五時間','八時間','十時間','二時間'],
+    a:2
+  },
+  {
+    sent:'たけしさんは、まいにち電車で大学に行きます。',
+    q:'どうやって大学に行きますか。',
+    choices:['バス','車','歩いて','電車で'],
+    a:3
+  },
+  {
+    sent:'今日は、あまりさむくないです。',
+    q:'今日はどうですか。',
+    choices:['あつい','さむい','すずしい','あまりさむくない'],
+    a:3
+  },
+  {
+    sent:'私は、七時に朝ごはんを食べます。',
+    q:'何時に朝ごはんを食べますか。',
+    choices:['六時','七時','八時','九時'],
+    a:1
+  },
+  {
+    sent:'昨日、母と買い物をしました。',
+    q:'誰と買い物をしましたか。',
+    choices:['父','母','友だち','先生'],
+    a:1
+  },
+  {
+    sent:'来週、テストがあります。',
+    q:'何がありますか。',
+    choices:['パーティー','しけん','クラス','アルバイト'],
+    a:1
+  },
+  {
+    sent:'私は、毎朝コーヒーをのみません。',
+    q:'何をのみませんか。',
+    choices:['水','コーヒー','おちゃ','ジュース'],
+    a:1
+  },
+  {
+    sent:'今日は、しゅくだいがたくさんあります。',
+    q:'何がありますか。',
+    choices:['テスト','しゅくだい','ゲーム','やすみ'],
+    a:1
+  },
+  {
+    sent:'昨日、家で日本語をべんきょうしました。',
+    q:'どこでべんきょうしましたか。',
+    choices:['学校','カフェ','家','図書館'],
+    a:2
+  },
+  {
+    sent:'私は、たくさん本を読みます。',
+    q:'何を読みますか。',
+    choices:['しんぶん','本','雑誌','メール'],
+    a:1
+  },
+  {
+    sent:'先週、友だちと、ううみに、行きました。',
+    q:'どこに行きましたか。',
+    choices:['山','川','海','森'],
+    a:2
+  },
+  {
+    sent:'今日は、クラスが三つあります。',
+    q:'クラスはいくつありますか。',
+    choices:['一つ','二つ','三つ','四つ'],
+    a:2
+  },
+  {
+    sent:'きのう、バスで会社に行きました。',
+    q:'どうやって会社に行きましたか。',
+    choices:['車','バス','歩いて','電車'],
+    a:1
+  },
+  {
+    sent:'私は、よく、いぬとさんぽしますう。',
+    q:'誰とさんぽしますか。',
+    choices:['友だち','母','犬','一人で'],
+    a:2
+  },
+  {
+    sent:'明日、雨がふると思います。',
+    q:'明日の天気はどうと思いますか。',
+    choices:['晴れ','雪','雨','くもり'],
+    a:2
+  },
+  {
+    sent:'私は、毎日、日本語を二時間べんきょうします。',
+    q:'どれくらいべんきょうしますか。',
+    choices:['一時間','二時間','三時間','三十分'],
+    a:1
+  },
+  {
+    sent:'きのう、友だちに、しゃしんを送りました。',
+    q:'誰に送りましたか。',
+    choices:['父','先生','友だち','姉'],
+    a:2
+  },
+  {
+    sent:'今朝、パンを食べませんでした。',
+    q:'何を食べませんでしたか。',
+    choices:['パン','ごはん','くだもの','サラダ'],
+    a:0
+  },
+  {
+    sent:'きょうは、しずかないちにちでした。',
+    q:'今日はどんな日でしたか。',
+    choices:['にぎやかな','しずかな','あつい','さむい'],
+    a:1
+  },
+  {
+    sent:'私は、たまにテレビを見ますう。',
+    q:'何を見ますか。',
+    choices:['映画','テレビ','アニメ','YouTube'],
+    a:1
+  },
+  {
+    sent:'たけしさんは、今朝六時に起きました。',
+    q:'何時に起きましたか。',
+    choices:['五時','六時','七時','八時'],
+    a:1
+  },
+  {
+    sent:'昨日、デパートで、くつを買いました。',
+    q:'何を買いましたか。',
+    choices:['シャツ','くつ','かばん','とけい'],
+    a:1
+  },
+  {
+    sent:'私は、よく、図書館でべんきょうします。',
+    q:'どこでべんきょうしますか。',
+    choices:['家','カフェ','図書館','学校'],
+    a:2
+  },
+  {
+    sent:'来月、日本に友だちが来ます。',
+    q:'来月だれが来ますか。',
+    choices:['先生','友だち','兄','母'],
+    a:1
+  },
+  {
+    sent:'今日は、あまりいそがしくないです。',
+    q:'今日はどうですか。',
+    choices:['いそがしい','いそがしくない','ひまじゃない','あつい'],
+    a:1
+  },
+  {
+    sent:'私は、昨日三時間ゲームをしました。',
+    q:'どれくらいゲームをしましたか。',
+    choices:['一時間','二時間','三時間','四時間'],
+    a:2
+  },
+  {
+    sent:'きのう、先生と話しました。',
+    q:'誰と話しましたか。',
+    choices:['母','先生','友だち','妹'],
+    a:1
+  },
+  {
+    sent:'私は、まいにち、音楽を聞きます。',
+    q:'何を聞きますか。',
+    choices:['ニュース','音楽','ラジオ','CD'],
+    a:1
+  },
+  {
+    sent:'私は、週末に、よくえいがを見ますう。',
+    q:'週末何をしますか。',
+    choices:['えいがを見ます','本を読みます','べんきょうします','料理します'],
+    a:0
+  },
+  {
+    sent:'昨日、たくさんしゅくだいがありました。',
+    q:'昨日どうでしたか。',
+    choices:['しゅくだいがありませんでした','あまりしゅくだいがありませんでした','しゅくだいがたくさんありました','ひまでした'],
+    a:2
+  },
+  {
+    sent:'今日は、大学でパーティーがありますう。',
+    q:'どこでパーティーがありますか。',
+    choices:['家','レストラン','大学','カフェ'],
+    a:2
+  },
+  {
+    sent:'私は、朝、ジョギングをしますう。',
+    q:'いつジョギングをしますか。',
+    choices:['朝','昼','夕方','よる'],
+    a:0
+  },
+  {
+    sent:'私は、朝ごはんに、トーストを食べますう。',
+    q:'朝ごはんに何を食べますか。',
+    choices:['ごはん','サラダ','トースト','みそしる'],
+    a:2
+  },
+  {
+    sent:'きのうは、あまりねむれませんでした。',
+    q:'昨日どうでしたか。',
+    choices:['よくねむれました','ぜんぜんねむれませんでした','あまりねむれなかったです','はやくねました'],
+    a:2
+  },
+  {
+    sent:'私は、よく、スーパーで買い物をします。',
+    q:'どこで買い物をしますか。',
+    choices:['コンビニ','デパート','スーパー','インターネット'],
+    a:2
+  },
+  {
+    sent:'明日、友だちと、ばんごはんを、食べます。',
+    q:'誰とばんごはんを食べますか。',
+    choices:['先生','母','友だち','一人で'],
+    a:2
+  },
+  {
+    sent:'私は、毎週、日本語のクラスに行きます。',
+    q:'何のクラスに行きますか。',
+    choices:['英語','中国語','日本語','フランス語'],
+    a:2
+  },
+  {
+    sent:'きのう、バスがぜんぜん来ませんでした。',
+    q:'何が来ませんでしたか。',
+    choices:['タクシー','電車','バス','先生'],
+    a:2
+  },
+  {
+    sent:'私は、きょうしつで、ノートをなくしました。',
+    q:'どこでノートをなくしましたか。',
+    choices:['こうえん','きょうしつ','家','カフェ'],
+    a:1
+  },
+  {
+    sent:'私は、よく、夜12時に、ねます。',
+    q:'何時にねますか。',
+    choices:['十時','十一時','十二時','一時'],
+    a:2
+  }
+];
+
+
+/* -------------------- FURIGANA DATA -------------------- */
+// Mapping of Kanji phrases to their Furigana (reading) to support ruby tags
+const furiganaMap = {
+    '時': 'じ', '友だち': 'ともだち', '家': 'いえ', '図書館': 'としょかん',  '旅行': 'りょこう', '週末': 'しゅうまつ','山': 'やま','海': 'うみ','森': 'もり','川': 'かわ',
+    '毎日': 'まいにち','茶': 'ちゃ',  '昨日': 'きのう', '間': 'かん', 
+    '先週': 'せんしゅう', '食': 'た', 'すし': '寿司','電車': 'でんしゃ', '大学': 'だいがく',  '春': 'はる','夏': 'なつ','秋': 'あき','冬': 'ふゆ',
+    '天気': 'てんき', '晴れ': 'はれ', '雪': 'ゆき', '雨': 'あめ', '曇': 'くも', '宿題': 'しゅくだい',
+    '日曜日': 'にちようび', '母': 'はは', '先生': 'せんせい', '兄': 'あに', '誰': 'だれ',
+    '数学': 'すうがく', '英': 'えい', '歴史': 'れきし','毎朝': 'まいあさ', '朝': 'あさ', 
+    '公園': 'こうえん', '写真': 'しゃしん', '学校': 'がっこう', '駅': 'えき', '弟': 'おとうと', '高校生': 'こうこうせい', '大学生': 'だいがくせい', '中学生': 'ちゅうがくせい', '員': 'いん',
+    '土曜日': 'どようび', '映画': 'えいが', '中国': 'ちゅうごく', '韓国': 'かんこく', '授業': 'じゅぎょう','語': 'ご',
+    '夜': 'よる', '運動': 'うんどう', '料理': 'りょうり','日本': 'にほん',
+    '猫': 'ねこ', '犬': 'いぬ', '魚': 'さかな', '鳥': 'とり', '肉': 'にく',
+    '買': 'か', '毎週': 'まいしゅう', '金曜日': 'きんようび', '月曜日': 'げつようび', '水曜日': 'すいようび','火曜日': 'かようび',
+    '前': 'まえ',  '寒': 'さむ',     '妹': 'いもうと', '音楽': 'おんがく', '聞': 'き', 
+    '昼': 'ひる',  '小': 'ちい', '帰': 'かえ',
+    '来週': 'らいしゅう', '父': 'ちち', '東京': 'とうきょう','何': 'なに','物': 'もの','雑誌': 'ざっし', '会社': 'かいしゃ',
+    // Add any other Kanji/Katakana that needs furigana here
+};
+
+/**
+ * Converts text with Kanji/Kana into HTML with <ruby> tags based on the mapping.
+ * Prioritizes the longest Kanji sequence to prevent multiple replacements.
+ */
+function applyFurigana(text) {
+    let result = text;
+    
+    // Sort keys from LONGEST to SHORTEST. This is CRITICAL for correct overlap handling.
+    const sortedKeys = Object.keys(furiganaMap).sort((a, b) => b.length - a.length);
+
+    sortedKeys.forEach(key => {
+        const reading = furiganaMap[key];
+        // Create the full ruby tag structure for the replacement
+        const rubyTag = `<ruby>${key}<rt>${reading}</rt></ruby>`;
+        
+        // Create a regular expression to match the key globally and escape special characters
+        // \b is often not reliable in Japanese, so we rely on the longest-match sort
+        const regex = new RegExp(key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+        
+        // Replace the key with the ruby tag HTML
+        result = result.replace(regex, rubyTag);
+    });
+
+    return result;
+}
+
+
+/* -------------------- MAIN SCRIPT (LISTENING EXERCISE ONLY) -------------------- */
+
+// Helper to create elements
+const el = (tag, props, children) => {
+  const element = document.createElement(tag);
+  Object.assign(element, props);
+  if (children) {
+    children.forEach(child => element.appendChild(child));
+  }
+  return element;
+};
+
+// Global references
+const listeningListEl = document.getElementById('listeningList');
+const listScoreEl = document.getElementById('listScore');
+const answerKeyPanelEl = document.getElementById('answerKeyPanel');
+const keyContentEl = document.getElementById('keyContent');
+
+// State for answers
+let userListAnswers = Array(listeningData.length).fill(null);
+
+
+// --- Listening Panel Functions ---
+
+function setupListening() {
+  listeningListEl.innerHTML = '';
+  // Add the grid class for multi-column layout
+  listeningListEl.classList.add('listening-grid'); 
+
+  listeningData.forEach((item, index) => {
+    const questionEl = el('div', { className: 'question' });
+
+    // TTS Button (Play audio)
+    const playBtn = el('span', {
+      className: 'tts',
+      textContent: '🔊 聞く',
+      title: 'Play Japanese Audio'
+    });
+    playBtn.onclick = () => speakTTS(item.sent); 
+
+    // Question text element (uses innerHTML to support ruby tags)
+    const qTextElement = el('strong');
+    // Apply Furigana to the question text
+    qTextElement.innerHTML = `Q${index + 1}: ${applyFurigana(item.q)}`;
+
+    // Question text and TTS button wrapper
+    const qHeader = el('div', {}, [
+        qTextElement,
+        playBtn
+    ]);
+    questionEl.appendChild(qHeader);
+
+    // Choices container for horizontal layout
+    const choiceGroup = el('div', { className: 'choice-group' });
+
+    // Choices
+    item.choices.forEach((choiceText, choiceIndex) => {
+      const choiceId = `list-${index}-${choiceIndex}`;
+      const radio = el('input', {
+        type: 'radio',
+        id: choiceId,
+        name: `listQ${index}`,
+        value: choiceIndex,
+        onchange: () => userListAnswers[index] = choiceIndex
+      });
+      if (userListAnswers[index] === choiceIndex) {
+        radio.checked = true;
+      }
+      
+      // Create the label
+      const label = el('label', { htmlFor: choiceId, className: 'choice' });
+      label.appendChild(radio); // Append radio button first
+      
+      // Append the furigana-wrapped text as HTML content
+      label.innerHTML += applyFurigana(choiceText); 
+
+      choiceGroup.appendChild(label);
+    });
+    
+    questionEl.appendChild(choiceGroup);
+    listeningListEl.appendChild(questionEl);
+  });
+}
+
+function speakTTS(text) {
+  if ('speechSynthesis' in window) {
+    const speech = new SpeechSynthesisUtterance(text);
+
+    // ★ Add this line — selects Sayaka or fallback Japanese voice
+    if (jpVoice) speech.voice = jpVoice;
+
+    // Get values from sliders
+    const rateControl = document.getElementById('rate');
+    const pitchControl = document.getElementById('pitch');
+
+    speech.lang = 'ja-JP';
+
+    // Set rate and pitch
+    speech.rate = rateControl ? parseFloat(rateControl.value) : 1.0;
+    speech.pitch = pitchControl ? parseFloat(pitchControl.value) : 1.0;
+
+    // Stop previous speech first
+    window.speechSynthesis.cancel();
+    speechSynthesis.speak(speech);
+  } else {
+    alert('Your browser does not support web speech synthesis (TTS).');
+  }
+}
+
+
+function submitListAnswers() {
+  let correctCount = 0;
+  listeningData.forEach((item, index) => {
+    if (userListAnswers[index] === item.a) {
+      correctCount++;
+    }
+  });
+  listScoreEl.textContent = `Score: ${correctCount} / ${listeningData.length}`;
+}
+
+function resetAnswers() {
+  userListAnswers = Array(listeningData.length).fill(null);
+  setupListening(); // Redraw the questions with cleared answers
+  listScoreEl.textContent = '';
+}
+
+function showKey() {
+    let keyHtml = `<h3>Listening Answer Key (${listeningData.length} Questions)</h3><ol>`;
+    listeningData.forEach((item, index) => {
+        const correctAnswerText = item.choices[item.a];
+        keyHtml += `<li><strong>Q${index + 1}</strong> (${item.sent}): ${applyFurigana(correctAnswerText)}</li>`;
+    });
+    keyHtml += '</ol>';
+    keyContentEl.innerHTML = keyHtml;
+    answerKeyPanelEl.classList.remove('hidden');
+}
+
+function hideKey() {
+    answerKeyPanelEl.classList.add('hidden');
+}
+
+
+// --- Navigation and Initialization ---
+
+function showSection(sectionId) {
+    // Hide all main panels first
+    document.querySelectorAll('main .panel').forEach(panel => {
+        if (panel.id !== 'answerKeyPanel') {
+            panel.classList.add('hidden');
+        }
+    });
+    // Show the requested panel
+    document.getElementById(sectionId).classList.remove('hidden');
+}
+
+// Initial setup
+document.addEventListener('DOMContentLoaded', (event) => {
+    setupListening();
+    showSection('listPanel');
+});
+
+</script>
+</body>
+</html>

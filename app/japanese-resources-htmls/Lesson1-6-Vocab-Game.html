@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title id="appTitle">Puyo-style Falling Vocab Game</title>
+<style>
+:root{
+  --bg-dark:#071033;
+  --card:#f1fbff;         /* snow panel */
+  --accent:#0ea5c9;
+  --muted:#4b6471;
+  --light-pink: #FFD1DC; /* <--- New variable for Blush Pink */
+  --good:#16a34a;
+  --bad:#ef4444;
+  --btn-bg: rgba(14,165,201,0.12);
+  --btn-border: rgba(14,165,201,0.45);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter, "Noto Sans JP", "Hiragino Kaku Gothic Pro", system-ui, -apple-system, Arial; -webkit-font-smoothing:antialiased}
+body{background:linear-gradient(180deg,#e6f7ff 0%, #eaf9ff 100%);color:#04202a;display:flex;align-items:flex-start;justify-content:center;padding:18px}
+.app{width:1300px;max-width:100%;background:linear-gradient(180deg,#ffffff,#f3fbff);border-radius:12px;padding:14px;box-shadow:0 12px 40px rgba(4,32,42,0.08)}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.header h1{margin:0;font-size:20px;color:#033b49}
+.tabs{display:flex;gap:6px}
+.tab-btn{background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--accent);padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+.tab-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+.controls{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.controls .small{font-size:15px;color:var(--muted)}
+
+/* --- Action buttons forced to next line (from previous request) --- */
+.control-actions {
+  flex-basis: 100%;
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: flex-end;
+}
+/* ----------------------------------------------------------- */
+
+/* TIMER STYLES */
+.stat.timer-display{
+  font-weight:700;
+  color:var(--accent);
+  font-size:22px;
+  padding: 4px 8px;
+  border: 1px solid var(--btn-border);
+  border-radius: 6px;
+}
+.stat.timer-display.low{
+  color:var(--bad);
+  animation: pulseRed 500ms infinite alternate;
+}
+@keyframes pulseRed{
+  from{opacity:1}
+  to{opacity:0.75}
+}
+/* END TIMER STYLES */
+
+.layout{display:flex;gap:16px;flex-direction:column}
+.container{display:block}
+.top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stat{font-size:14px;color:var(--muted)}
+
+.card{background:var(--card);padding:12px;border-radius:10px;min-height:420px;border:1px solid rgba(3,59,73,0.04)}
+.game-wrap{display:flex;gap:16px;align-items:flex-start}
+.game-area{position:relative;width:100%;height:400px;border-radius:8px;background:linear-gradient(180deg,#dff7ff,#eafcff);overflow:hidden;border:1px solid rgba(3,59,73,0.06);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px}
+.hud{display:flex;gap:14px;align-items:center}
+.answer-bar{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.choice-btn{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(3,59,73,0.06);background:white;cursor:pointer;font-size:20px;color:#063642;font-weight:600;box-shadow:0 6px 18px rgba(6,52,58,0.03)}
+.choice-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(6,52,58,0.06)}
+.choice-btn.correct{background:var(--good);border:2px solid rgba(16,185,129,0.9);color:white}
+.choice-btn.wrong{background:var(--bad);border:2px solid rgba(239,68,68,0.9);color:white}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.preview{width:220px;padding-left:12px}
+.preview .pv-title{font-size:15px;color:var(--muted);margin-bottom:8px}
+.vocab-list{max-height:420px;overflow:auto}
+.vocab-row{padding:8px;border-bottom:1px dashed rgba(3,59,73,0.03);display:flex;justify-content:space-between;align-items:center}
+.flash-big-jp{font-size:72px;line-height:1;margin-bottom:6px;color:#033b49}
+.flash-reading{font-size:28px;color:var(--muted)}
+.flash-eng{font-size:22px;text-align:center;margin-top:10px;color:#04202a}
+.small{font-size:12px;color:var(--muted)}
+.center{display:flex;align-items:center;justify-content:center}
+.kana-note{font-size:12px;color:var(--muted);margin-top:6px}
+.footer{margin-top:12px;display:flex;justify-content:space-between;align-items:center;color:var(--muted)}
+.btn{background:var(--btn-bg);border:1px solid var(--btn-border);color:var(--accent);padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+.btn:hover{background:rgba(14,165,201,0.22);border-color:rgba(14,165,201,0.8);color:white}
+@media(max-width:880px){
+  .app{padding:10px}
+  .game-area{height:520px}
+  .preview{display:none}
+}
+/* pile cell and block styles */
+.pile-grid{position:absolute;left:0;right:0;bottom:8px;height:100%;pointer-events:none}
+.pile-column{position:absolute;bottom:8px;display:flex;flex-direction:column-reverse;align-items:center;gap:6px}
+.block{
+  /* 1. CSS VISUAL WIDTH */
+  width:120px;
+  height:100px;
+  /* ----------------------------------------------------------------------------- */
+  border-radius:8px;
+  background:white;
+  border: 2px solid var(--light-pink);
+  box-shadow: 0 6px 18px rgba(6,52,58,0.04);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;font-weight:700;color:#08323a;
+  transform-origin:center;
+}
+.block.jp{background:linear-gradient(180deg,#ffffff,#ecfeff)}
+.block.fail{
+	opacity:0.95
+	border: 2px solid var(--bad); /* <-- Adds a red border to failed blocks */}
+.stack-area{position:absolute;left:0;right:0;bottom:8px;pointer-events:none}
+.flash-success{position:absolute;inset:0;background:rgba(16,185,129,0.06);pointer-events:none;animation:fadeOut 420ms forwards}
+.flash-fail{position:absolute;inset:0;background:rgba(239,68,68,0.06);pointer-events:none;animation:fadeOut 420ms forwards}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+</style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Puyo-style vocab game">
+    <div class="header">
+      <h1 id="lessonTitle">Piled Falling Vocab Game</h1>
+      <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="vocab">Vocabulary List</button>
+        <button class="tab-btn" data-tab="flash">Flashcards</button>
+        <button class="tab-btn" data-tab="game">Game</button>
+      </div>
+
+      <div class="controls">
+        <!-- Lesson, Mode, and Speed Selectors (Keep on the first line) -->
+        <div class="small">Lesson:
+            <select id="lessonSelect" class="small" style="margin-left:6px"></select>
+        </div>
+        <div class="small">Mode: <strong id="modeLabel">Japanese → English</strong></div>
+        <div class="small">Speed:
+          <select id="speedSelect" class="small" style="margin-left:6px">
+            <option value="slow">Slow</option>
+            <option value="normal" selected>Normal</option>
+            <option value="fast">Fast</option>
+            <option value="veryfast">Very Fast</option>
+          </select>
+        </div>
+<div style="margin-top:10px;">
+  <label for="rateControl">🎧Speech Rate:</label>
+  <input type="range" id="rateControl" min="0.5" max="2" step="0.1" value="1"
+         style="vertical-align:middle;">
+  <span id="rateValue">1.0×</span>
+</div>
+<div style="margin-top:8px;">
+  <label for="voiceSelect">🗣️Voice:</label>
+  <select id="voiceSelect"></select>
+</div>
+        <!-- Action Buttons (Wrapped in a new div to force a line break) -->
+        <div class="control-actions">
+            <button id="startBtn" class="btn">Start</button>
+            <button id="pauseBtn" class="btn">Pause</button>
+            <button id="resetBtn" class="btn">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div id="vocab" class="container card" style="display:block">
+        <div class="top-row">
+          <strong id="vocabListTitle">Vocabulary</strong>
+          <div class="small">Click 🔊 to hear pronunciation</div>
+        </div>
+        <div class="vocab-list" id="vocabList"></div>
+        <div style="margin-top:8px">
+          <button id="openFlash" class="btn">Open Flashcards</button>
+          <button id="openGame" class="btn">Open Game</button>
+        </div>
+      </div>
+
+      <div id="flash" class="container card" style="display:none">
+        <div class="top-row">
+          <strong>Flashcards</strong>
+          <div>
+            <button id="prevFlash" class="btn">Prev</button>
+            <button id="nextFlash" class="btn">Next</button>
+            <button id="shuffleFlash" class="btn">Shuffle</button>
+            <button id="hearFlash" class="btn">🔊 Hear</button>
+          </div>
+        </div>
+        <div class="center" style="flex-direction:column;min-height:360px;justify-content:flex-start">
+          <div class="flash-big-jp" id="flashJP">漢字（かな）</div>
+          <div class="flash-reading" id="flashReading">(かな)</div>
+          <div class="flash-eng" id="flashEN">English meaning</div>
+        </div>
+      </div>
+
+      <div id="game" class="container" style="display:none">
+        <div class="card">
+          <div class="top-row">
+            <div>
+              <strong>Game: <span id="gameLessonTitle"></span></strong>
+              <div class="small">Japanese (Kanji + reading) falls — choose the correct English meaning</div>
+            </div>
+            <div class="hud">
+              <div class="stat">Score: <span id="score">0</span></div>
+              <div class="stat">Lives (pile space): <span id="lives">6</span></div>
+              <div class="stat">Streak: <span id="streak">0</span></div>
+              <div class="stat timer-display" id="timerDisplay">10s</div>
+            </div>
+          </div>
+
+          <div class="game-wrap">
+            <div style="flex:1;position:relative;">
+              <div id="gameArea" class="game-area" aria-live="polite">
+                <div id="pileGrid" class="pile-grid"></div>
+                <div id="stackArea" class="stack-area"></div>
+              </div>
+
+              <div id="answerArea" class="answer-bar" style="margin-top:12px"></div>
+
+              <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+                <div class="small">Next:</div>
+                <div id="preview" class="small" style="min-width:240px;color:var(--muted)"></div>
+                <div class="small">Pile reaches top → Game Over</div>
+              </div>
+            </div>
+
+            <div class="preview" id="sidePreview" aria-hidden="true">
+              <div class="pv-title">Preview</div>
+              <div id="pvContent" style="font-size:18px;color:var(--muted)"></div>
+              <div style="margin-top:12px">
+                <button id="openVocabTab" class="btn">Open Vocab</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div class="small">➤Editable — You can open this HTML in a text editor and edit arrays in the &lt;script&gt;if you want to change or add new words or new set of words.</div>
+      <div class="small">➤This exercise is designed and created to run locally and in a single-html-file, browser format, by Tseng, Ken-sensei, George Mason University, Japanese Program, and co-coded by ChatGPT and Gemini。Please disregard our typo if any.🙏. P.S. It has not been tested with any smart phone.</div>
+    </div>
+  </div>
+
+<script>
+/* ------------------ All Vocab Lessons ------------------ */
+let speechRate = 0.75;
+let selectedVoice = null;
+
+document.getElementById("rateControl").addEventListener("input", (e)=>{
+  speechRate = parseFloat(e.target.value);
+  document.getElementById("rateValue").textContent = speechRate.toFixed(2) + "×";
+});
+
+
+const allLessons = {
+    'greetings': {
+        title: 'あいさつ',
+        data: [
+            {j:'おはよう', r:'おはよう', e:'Morning'},
+            {j:'おはようございます', r:'おはようございます', e:'Good morning'},
+            {j:'今日は', r:'こんにちは', e:'Good day/good afternoon'},
+            {j:'今晩は', r:'こんばんは', e:'Good evening'},
+            {j:'さようなら', r:'さようなら', e:'Good-bye'},
+            {j:'お休み（なさい）', r:'おやすみ（なさい）', e:'Good night'},
+            {j:'ありがとう', r:'ありがとう', e:'Thanks'},
+            {j:'ありがとうございます', r:'ありがとうございます', e:'Thank you very much'},
+            {j:'すみません', r:'すみません', e:"Excuse me/I'm sorry"}, 
+            {j:'いいえ', r:'いいえ', e:'No;Not at all'},
+            {j:'行ってきます', r:'いってきます', e:"I'll go and come back"},
+            {j:'行ってらっしゃい', r:'いってらっしゃい', e:'Please go and come back'},
+            {j:'ただ今', r:'ただいま', e:"I'm home"},
+            {j:'お帰り（なさい）', r:'おかえり（なさい）', e:'Welcome home'},
+            {j:'いただきます', r:'いただきます', e:'Thank you for the food (before eating)'},
+            {j:'ご馳走さま（でした）', r:'ごちそうさま（でした）', e:'Thank you for the food (after eating)'},
+            {j:'初めまして', r:'はじめまして', e:'Nice to meet you (starting phrase)'},
+            {j:'～～です', r:'なになにです', e:'I am blah blah blah'},
+            {j:'宜しくお願いします。', r:'よろしくおねがいします', e:'Nice to meet you(ending phrase)'},
+        ]
+    },
+    'genkiL1': {
+        title: 'レッスン1',
+        data: [
+  {j:'大学', r:'だいがく', e:'college; university'},
+  {j:'高校', r:'こうこう', e:'high school'},
+  {j:'学生', r:'がくせい', e:'student'},
+  {j:'大学生', r:'だいがくせい', e:'college student'},
+  {j:'留学生', r:'りゅうがくせい', e:'international student'},
+  {j:'先生', r:'せんせい', e:'teacher; professor'},
+  {j:'〜年生', r:'〜ねんせい', e:'... year student'},
+  {j:'一年生', r:'いちねんせい', e:'first-year student'},
+  {j:'専攻', r:'せんこう', e:'major'},
+  {j:'私', r:'わたし', e:'I/me'},
+  {j:'友だち', r:'ともだち', e:'friend(s)'},
+  {j:'〜さん', r:'〜さん', e:'Mr./Mrs./Ms.'},
+  {j:'〜人', r:'〜じん', e:'... people (nationality)'},
+  {j:'日本人', r:'にほんじん', e:'Japanese people'},
+  {j:'今', r:'いま', e:'now'},
+  {j:'午前', r:'ごぜん', e:'A.M.'},
+  {j:'午後', r:'ごご', e:'P.M.'},
+  {j:'〜時', r:'〜じ', e:"...o'clock"},
+  {j:'一時', r:'いちじ', e:"one o'clock"},
+  {j:'半', r:'はん', e:'half'},
+  {j:'二時半', r:'にじはん', e:'half past two'},
+  {j:'日本', r:'にほん', e:'Japan'},
+  {j:'アメリカ', r:'あめりか', e:'U.S.A.'},
+  {j:'～〜語', r:'〜ご', e:'...language'},
+  {j:'日本語', r:'にほんご', e:'Japanese language'},
+  {j:'〜歳', r:'〜さい', e:'... years old'},
+  {j:'電話', r:'でんわ', e:'telephone'},
+  {j:'〜番', r:'〜ばん', e:'number'},
+  {j:'番号', r:'ばんごう', e:'number'},
+  {j:'名前', r:'なまえ', e:'name'},
+  {j:'何', r:'なん・なに', e:'what'},
+		  {j:'イギリス', r:'いぎりす', e:'Britain'},
+  {j:'オーストラリア', r:'おーすとらりあ', e:'Australia'},
+  {j:'韓国', r:'かんこく', e:'Korea'},
+  {j:'カナダ', r:'かなだ', e:'Canada'},
+  {j:'中国', r:'ちゅうごく', e:'China'},
+  {j:'インド', r:'いんど', e:'India'},
+  {j:'エジプト', r:'えじぷと', e:'Egypt'},
+  {j:'フィリピン', r:'ふぃりぴん', e:'Philippines'},
+		{j:'アジア研究', r:'あじあけんきゅう', e:'Asian studies'},
+  		{j:'経済', r:'けいざい', e:'economics'},
+  		{j:'工学', r:'こうがく', e:'engineering'},
+  		{j:'国際関係', r:'こくさいかんけい', e:'international relations'},
+  		{j:'コンピューター', r:'こんぴゅぅたぁ', e:'computer science'},
+  		{j:'政治', r:'せいじ', e:'politics'},
+  		{j:'生物学', r:'せいぶつがく', e:'biology'},
+  		{j:'ビジネス', r:'びじねす', e:'business'},
+  		{j:'文学', r:'ぶんがく', e:'literature'},
+  		{j:'歴史', r:'れきし', e:'history'},
+  		{j:'医者', r:'いしゃ', e:'doctor'},
+  		{j:'会社員', r:'かいしゃいん', e:'office worker'},
+  		{j:'看護師', r:'かんごし', e:'nurse'},
+  		{j:'高校生', r:'こうこうせい', e:'high school student'},
+  		{j:'主婦', r:'しゅふ', e:'housewife'},
+ 		{j:'大学院生', r:'だいがくいんせい', e:'graduate student'},
+  		{j:'弁護士', r:'べんごし', e:'lawyer'},
+             	{j:'お母さん', r:'おかあさん', e:'mother'},
+  		{j:'お父さん', r:'おとうさん', e:'father'},
+  		{j:'お姉さん', r:'おねえさん', e:'older sister'},
+  		{j:'お兄さん', r:'おにいさん', e:'older brother'},
+  		{j:'妹', r:'いもうと', e:'younger sister'},
+  		{j:'弟', r:'おとうと', e:'younger brother'}
+        ]
+    },
+    'genkiL2': {
+        title: 'レッスン2',
+        data: [
+  { j:'これ', r:'これ', e:'this (as a pronoun)', id:0 },
+  { j:'それ', r:'それ', e:'that (as a pronoun)', id:1 },
+  { j:'あれ', r:'あれ', e:'that over there (as a pronoun)', id:2 },
+  { j:'どれ', r:'どれ', e:'which one  (as a pronoun)', id:3 },
+  { j:'この', r:'この', e:'this …(as a determiner)', id:4 },
+  { j:'その', r:'その', e:'that …(as a determiner)', id:5 },
+  { j:'あの', r:'あの', e:'that …over there(as a determiner)', id:6 },
+  { j:'どの', r:'どの', e:'which … (as a determiner)', id:7 },
+  { j:'ここ', r:'ここ', e:'here', id:8 },
+  { j:'そこ', r:'そこ', e:'there', id:9 },
+  { j:'あそこ', r:'あそこ', e:'over there', id:10 },
+  { j:'どこ', r:'どこ', e:'where', id:11 },
+  { j:'だれ', r:'だれ', e:'who', id:12 },
+  { j:'美味しい', r:'おいしい', e:'delicious', id:13 },
+  { j:'魚', r:'さかな', e:'fish', id:14 },
+  { j:'豚カツ', r:'とんかつ', e:'pork cutlet', id:15 },
+  { j:'肉', r:'にく', e:'meat', id:16 },
+  { j:'メニュー', r:'めにゅぅ', e:'menu', id:17 },
+  { j:'野菜', r:'やさい', e:'vegetable', id:18 },
+  { j:'傘', r:'かさ', e:'umbrella', id:19 },
+  { j:'鞄', r:'かばん', e:'bag', id:20 },
+  { j:'靴', r:'くつ', e:'shoes', id:21 },
+  { j:'財布', r:'さいふ', e:'wallet', id:22 },
+  { j:'ジーンズ', r:'じぃんず', e:'jeans', id:23 },
+  { j:'自転車', r:'じてんしゃ', e:'bicycle', id:24 },
+  { j:'新聞', r:'しんぶん', e:'newspaper', id:25 },
+  { j:'スマホ', r:'すまほ', e:'smartphone', id:26 },
+  { j:'Tシャツ', r:'てぃぃしゃつ', e:'T-shirt', id:27 },
+  { j:'時計', r:'とけい', e:'watch; clock', id:28 },
+  { j:'ノート', r:'のぉと', e:'notebook', id:29 },
+  { j:'ペン', r:'ぺん', e:'pen', id:30 },
+  { j:'帽子', r:'ぼうし', e:'hat; cap', id:31 },
+  { j:'本', r:'ほん', e:'book', id:32 },
+  { j:'銀行', r:'ぎんこう', e:'bank', id:33 },
+  { j:'コンビニ', r:'こんびに', e:'convenience store', id:34 },
+  { j:'トイレ', r:'といれ', e:'toilet; restroom', id:35 },
+  { j:'図書館', r:'としょかん', e:'library', id:36 },
+  { j:'郵便局', r:'ゆうびんきょく', e:'post office', id:37 },
+  { j:'イギリス', r:'いぎりす', e:'Britain', id:38 },
+  { j:'韓国', r:'かんこく', e:'Korea', id:39 },
+  { j:'中国', r:'ちゅうごく', e:'China', id:40 },
+  { j:'英語', r:'えいご', e:'English (language)', id:41 },
+  { j:'経済', r:'けいざい', e:'economics', id:42 },
+  { j:'コンピューター', r:'こんぴゅぅたぁ', e:'computer', id:43 },
+  { j:'ビジネス', r:'びじねす', e:'business', id:44 },
+  { j:'歴史', r:'れきし', e:'history', id:45 },
+  { j:'お母さん', r:'おかあさん', e:'mother', id:46 },
+  { j:'お父さん', r:'おとうさん', e:'father', id:47 },
+  { j:'いくら', r:'いくら', e:'how much', id:48 },
+  { j:'〜円', r:'〜えん', e:'… yen', id:49 },
+  { j:'高い', r:'たかい', e:'expensive; high', id:50 },
+  { j:'いらっしゃいませ', r:'いらっしゃいませ', e:'Welcome (to our store)', id:51 },
+  { j:'（〜を）おねがいします', r:'（〜を）おねがいします', e:'…, please.', id:52 },
+  { j:'（〜を）ください', r:'（〜を）ください', e:'Please give me …', id:53 },
+  { j:'じゃあ', r:'じゃあ', e:'then…; if that’s the case…', id:54 },
+  { j:'どうぞ', r:'どうぞ', e:'Please.; Here it is.', id:55 },
+  { j:'どうも', r:'どうも', e:'Thank you.', id:56 }
+]
+},
+    'genkiL3': {
+        title: 'レッスン3',
+        data: [
+ { j:'映画', r:'えいが', e:'movie', id:0 },
+  { j:'音楽', r:'おんがく', e:'music', id:1 },
+  { j:'雑誌', r:'ざっし', e:'magazine', id:2 },
+  { j:'スポーツ', r:'すぽぉつ', e:'sports', id:3 },
+  { j:'デート', r:'でぇと', e:'date (romantic, not calendar)', id:4 },
+  { j:'テニス', r:'てにす', e:'tennis', id:5 },
+  { j:'テレビ', r:'てれび', e:'TV', id:6 },
+  { j:'アイスクリーム', r:'あいすくりぃむ', e:'ice cream', id:7 },
+  { j:'ハンバーガー', r:'はんばぁがぁ', e:'hamburger', id:8 },
+  { j:'お酒', r:'おさけ', e:'sake; alcoholic drink', id:9 },
+  { j:'お茶', r:'おちゃ', e:'green tea', id:10 },
+  { j:'コーヒー', r:'こぉひぃ', e:'coffee', id:11 },
+  { j:'水', r:'みず', e:'water', id:12 },
+  { j:'朝ご飯', r:'あさごはん', e:'breakfast', id:13 },
+  { j:'昼ご飯', r:'ひるごはん', e:'lunch', id:14 },
+  { j:'晩ご飯', r:'ばんごはん', e:'dinner', id:15 },
+  { j:'家', r:'いえ', e:'home; house', id:16 },
+  { j:'家/内', r:'うち', e:'home; house; my place', id:17 },
+  { j:'学校', r:'がっこう', e:'school', id:18 },
+  { j:'喫茶店', r:'きっさてん', e:'tea plce/café', id:19 },
+  { j:'明日', r:'あした', e:'tomorrow', id:20 },
+  { j:'今日', r:'きょう', e:'today', id:21 },
+  { j:'朝', r:'あさ', e:'morning', id:22 },
+  { j:'今晩', r:'こんばん', e:'tonight', id:23 },
+  { j:'毎日', r:'まいにち', e:'every day', id:24 },
+  { j:'毎晩', r:'まいばん', e:'every night', id:25 },
+  { j:'週末', r:'しゅうまつ', e:'weekend', id:26 },
+  { j:'土曜日', r:'どようび', e:'Saturday', id:27 },
+  { j:'日曜日', r:'にちようび', e:'Sunday', id:28 },
+  { j:'行く', r:'いく', e:'to go', id:29 },
+  { j:'帰る', r:'かえる', e:'to go back; to return', id:30 },
+  { j:'聞く', r:'きく', e:'to listen; to hear', id:31 },
+  { j:'飲む', r:'のむ', e:'to drink', id:32 },
+  { j:'話す', r:'はなす', e:'to speak; to talk', id:33 },
+  { j:'読む', r:'よむ', e:'to read', id:34 },
+  { j:'起きる', r:'おきる', e:'to get up', id:35 },
+  { j:'食べる', r:'たべる', e:'to eat', id:36 },
+  { j:'寝る', r:'ねる', e:'to sleep; to go to sleep', id:37 },
+  { j:'見る', r:'みる', e:'to see; to look at; to watch', id:38 },
+  { j:'来る', r:'くる', e:'to come', id:39 },
+  { j:'する', r:'する', e:'to do', id:40 },
+  { j:'勉強する', r:'べんきょうする', e:'to study', id:41 },
+  { j:'いい', r:'いい', e:'good', id:42 },
+  { j:'早い', r:'はやい', e:'early', id:43 },
+  { j:'あまり', r:'あまり', e:'not much (used with negative)', id:44 },
+  { j:'全然', r:'ぜんぜん', e:'not at all (used with negative)', id:45 },
+  { j:'大抵', r:'たいてい', e:'usually', id:46 },
+  { j:'ちょっと', r:'ちょっと', e:'a little', id:47 },
+  { j:'時々', r:'ときどき', e:'sometimes', id:48 },
+  { j:'よく', r:'よく', e:'often; much', id:49 },
+  { j:'そうですね', r:'そうですね', e:"That's right.; Let me see.", id:50 },
+  { j:'でも', r:'でも', e:'but', id:51 },
+  { j:'どうですか', r:'どうですか', e:'How about...? / How is…?', id:52 },
+  { j:'はい', r:'はい', e:'yes', id:53 },
+  { j:'〜へ', r:'なになにへ', e:'to (direction)', id:54 },
+  { j:'〜で', r:'なになにで', e:'at…; in…; with…(the tool/by the mean of...)', id:55 },
+  { j:'いつ', r:'いつ', e:'when', id:56 },
+  { j:'〜頃', r:'〜ごろ', e:'at about…', id:57 },
+  { j:'カフェ', r:'かふぇ', e:'café', id:58 }
+]
+},
+'genkiL4': {
+    title: 'レッスン4',
+    data: [
+        {j:'ゲーム', r:'げぇむ', e:'game', id:0},
+        {j:'アルバイト', r:'あるばいと', e:'part-time job (more colloquially, バイト)', id:1},
+        {j:'買い物', r:'かいもの', e:'shopping', id:2},
+        {j:'クラス', r:'くらす', e:'class', id:3},
+        {j:'犬', r:'いぬ', e:'dog', id:4},
+        {j:'猫', r:'ねこ', e:'cat', id:5},
+        {j:'人', r:'ひと', e:'person', id:6},
+        {j:'子供', r:'こども', e:'child', id:7},
+        {j:'あなた', r:'あなた', e:'you', id:8},
+        {j:'椅子', r:'いす', e:'chair', id:9},
+        {j:'机', r:'つくえ', e:'desk', id:10},
+        {j:'写真', r:'しゃしん', e:'picture; photograph', id:11},
+        {j:'花', r:'はな', e:'flower', id:12},
+        {j:'レポート', r:'れぽぉと', e:'(term) paper', id:13},
+        {j:'ご飯', r:'ごはん', e:'rice; meal', id:14},
+        {j:'パン', r:'ぱん', e:'bread', id:15},
+        {j:'お寺', r:'おてら', e:'temple', id:16},
+        {j:'公園', r:'こうえん', e:'park', id:17},
+        {j:'スーパー', r:'すぅぱぁ', e:'supermarket', id:18},
+        {j:'バス停', r:'ばすてい', e:'bus stop', id:19},
+        {j:'病院', r:'びょういん', e:'hospital', id:20},
+        {j:'ホテル', r:'ほてる', e:'hotel', id:21},
+        {j:'本屋', r:'ほんや', e:'bookstore', id:22},
+        {j:'町', r:'まち', e:'town; city', id:23},
+        {j:'レストラン', r:'れすとらん', e:'restaurant', id:24},
+        {j:'昨日', r:'きのう', e:'yesterday', id:25},
+        {j:'〜時間', r:'〜じかん', e:'.. hours(hr counter)', id:26},
+        {j:'一時間', r:'いちじかん', e:'one hour', id:27},
+        {j:'先週', r:'せんしゅう', e:'last week', id:28},
+        {j:'時', r:'とき', e:'when...; at the time of... (~の)', id:29},
+        {j:'月曜日', r:'げつようび', e:'Monday', id:30},
+        {j:'火曜日', r:'かようび', e:'Tuesday', id:31},
+        {j:'水曜日', r:'すいようび', e:'Wednesday', id:32},
+        {j:'木曜日', r:'もくようび', e:'Thursday', id:33},
+        {j:'金曜日', r:'きんようび', e:'Friday', id:34},
+        {j:'会う', r:'あう', e:'to meet; to see (a person) (personに)', id:35},
+        {j:'ある', r:'ある', e:'there is... (placeにthingが)', id:36},
+        {j:'買う', r:'かう', e:'to buy (~を)', id:37},
+        {j:'書く', r:'かく', e:'to write (personにthingを)', id:38},
+        {j:'撮る', r:'とる', e:'to take (a picture) (~を)', id:39},
+        {j:'待つ', r:'まつ', e:'to wait (~を)', id:40},
+        {j:'分かる', r:'わかる', e:'to understand (~が)', id:41},
+        {j:'居る', r:'いる', e:'(a person) is in...; stays at... (place に personが)', id:42},
+        {j:'右', r:'みぎ', e:'right (~の)', id:43},
+        {j:'左', r:'ひだり', e:'left (~の)', id:44},
+        {j:'前', r:'まえ', e:'front (~の)', id:45},
+        {j:'後ろ', r:'うしろ', e:'back (~の)', id:46},
+        {j:'中', r:'なか', e:'inside (~の)', id:47},
+        {j:'上', r:'うえ', e:'on (~の)', id:48},
+        {j:'下', r:'した', e:'under (~の)', id:49},
+        {j:'近く', r:'ちかく', e:'near; nearby (~の)', id:50},
+        {j:'隣', r:'となり', e:'next (~の)', id:51},
+        {j:'間', r:'あいだ', e:'between (AとBの)', id:52},
+        {j:'〜ぐらい', r:'〜ぐらい', e:'about (approximate measurement)', id:53},
+        {j:'ご免なさい', r:'ごめんなさい', e:"I'm sorry.", id:54},
+        {j:'それから', r:'それから', e:'and then', id:55},
+        {j:'だから', r:'だから', e:'so; therefore', id:56},
+        {j:'沢山', r:'たくさん', e:'many; a lot', id:57},
+        {j:'〜と', r:'〜と', e:'and/with (conj. particle); and', id:58},
+        {j:'どうして', r:'どうして', e:'why', id:59},
+        {j:'一人で', r:'ひとりで', e:'alone', id:60},
+        {j:'もしもし', r:'もしもし', e:'Hello? (used on the phone)', id:61}
+    ]
+},
+'genkiL5': {
+        title: 'レッスン5',
+        data: [
+	{j:'食べ物', r:'たべもの', e:'food', id:0},
+        {j:'飲み物', r:'のみもの', e:'drink', id:1},
+        {j:'果物', r:'くだもの', e:'fruit', id:2},
+        {j:'休み', r:'やすみ', e:'holiday; day off; absence', id:3},
+        {j:'旅行', r:'りょこう', e:'travel', id:4},
+        {j:'海', r:'うみ', e:'sea', id:5},
+        {j:'サーフィン', r:'さぁふぃん', e:'surfing', id:6},
+        {j:'お土産', r:'おみやげ', e:'souvenir', id:7},
+        {j:'バス', r:'ばす', e:'bus', id:8},
+        {j:'天気', r:'てんき', e:'weather', id:9},
+        {j:'テスト', r:'てすと', e:'test', id:10},
+        {j:'宿題', r:'しゅくだい', e:'homework', id:11},
+        {j:'誕生日', r:'たんじょうび', e:'birthday', id:12},
+        {j:'部屋', r:'へや', e:'room', id:13},
+        {j:'僕', r:'ぼく', e:'I (used by men)', id:14},
+        {j:'新しい', r:'あたらしい', e:'new', id:15},
+        {j:'古い', r:'ふるい', e:'old (thing-not used for people)', id:16},
+        {j:'暑い', r:'あつい', e:'hot (weather)', id:17},
+        {j:'寒い', r:'さむい', e:'cold (weather-not used for things)', id:18},
+        {j:'熱い', r:'あつい', e:'hot (thing)', id:19},
+        {j:'忙しい', r:'いそがしい', e:'busy (people/days)', id:20},
+        {j:'大きい', r:'おおきい', e:'large', id:21},
+        {j:'小さい', r:'ちいさい', e:'small', id:22},
+        {j:'面白い', r:'おもしろい', e:'interesting; funny', id:23},
+        {j:'つまらない', r:'つまらない', e:'boring', id:24},
+        {j:'やさしい', r:'やさしい', e:'easy (problem); kind (person)', id:25},
+        {j:'難しい', r:'むずかしい', e:'difficult', id:26},
+        {j:'かっこいい', r:'かっこいい', e:'good-looking (conjugates like いい)', id:27},
+        {j:'怖い', r:'こわい', e:'frightening', id:28},
+        {j:'楽しい', r:'たのしい', e:'fun', id:29},
+        {j:'安い', r:'やすい', e:'inexpensive; cheap (thing)', id:30},
+        {j:'好き(な)', r:'すき(な)', e:'fond of; to like (~が)', id:31},
+        {j:'嫌い(な)', r:'きらい(な)', e:'disgusted with; to dislike (~が)', id:32},
+        {j:'大好き(な)', r:'だいすき(な)', e:'very fond of; to love (~が)', id:33},
+        {j:'大嫌い(な)', r:'だいきらい(な)', e:'to hate (~が)', id:34},
+        {j:'綺麗(な)', r:'きれい(な)', e:'beautiful; clean', id:35},
+        {j:'元気(な)', r:'げんき(な)', e:'healthy; energetic', id:36},
+        {j:'静か(な)', r:'しずか(な)', e:'quiet', id:37},
+        {j:'賑やか(な)', r:'にぎやか(な)', e:'lively', id:38},
+        {j:'暇(な)', r:'ひま(な)', e:'not busy; free (time)', id:39},
+        {j:'泳ぐ', r:'およぐ', e:'to swim', id:40},
+        {j:'聞く', r:'きく', e:'to ask (personに)', id:41},
+        {j:'乗る', r:'のる', e:'to ride; to board (~に)', id:42},
+        {j:'やる', r:'やる', e:'to do; to perform (~を)', id:43},
+        {j:'出かける', r:'でかける', e:'to go out', id:44},
+        {j:'一緒に', r:'いっしょに', e:'together', id:45},
+        {j:'すごく', r:'すごく', e:'extremely', id:46},
+        {j:'大丈夫', r:'だいじょうぶ', e:"It's okay.; Not to worry.; Everything is under control.", id:47},
+        {j:'とても', r:'とても', e:'very', id:48},
+        {j:'どんな', r:'どんな', e:'what kind of...', id:49},
+        {j:'〜枚', r:'〜まい', e:'[counter for flat objects]', id:50},
+        {j:'Lサイズ', r:'えるさいず', e:'size L', id:51}
+    ]
+},
+'genkiL6': {
+    title: 'レッスン6',
+    data: [
+        {j:'漢字', r:'かんじ', e:'kanji; Chinese character', id:0},
+        {j:'教科書', r:'きょうかしょ', e:'textbook', id:1},
+        {j:'ページ', r:'ぺぇじ', e:'page', id:2},
+        {j:'次', r:'つぎ', e:'next', id:3},
+        {j:'お金', r:'おかね', e:'money', id:4},
+        {j:'荷物', r:'にもつ', e:'baggage', id:5},
+        {j:'パソコン', r:'ぱそこん', e:'personal computer', id:6},
+        {j:'シャワー', r:'しゃわぁ', e:'shower', id:7},
+        {j:'エアコン', r:'えぁこん', e:'air conditioner', id:8},
+        {j:'電気', r:'でんき', e:'electricity; light', id:9},
+        {j:'窓', r:'まど', e:'window', id:10},
+        {j:'電車', r:'でんしゃ', e:'train', id:11},
+        {j:'国', r:'くに', e:'country; place of origin', id:12},
+        {j:'今週', r:'こんしゅう', e:'this week', id:13},
+        {j:'来週', r:'らいしゅう', e:'next week', id:14},
+        {j:'来年', r:'らいねん', e:'next year', id:15},
+        {j:'夜', r:'よる', e:'night', id:16},
+        {j:'大変(な)', r:'たいへん(な)', e:'tough (situation)', id:17},
+        {j:'遊ぶ', r:'あそぶ', e:'to play; to spend time pleasantly', id:18},
+        {j:'急ぐ', r:'いそぐ', e:'to hurry', id:19},
+        {j:'返す', r:'かえす', e:'to return (a thing) (personにthingを)', id:20},
+        {j:'消す', r:'けす', e:'to turn off; to erase (~を)', id:21},
+        {j:'死ぬ', r:'しぬ', e:'to die', id:22},
+        {j:'座る', r:'すわる', e:'to sit down (seatに)', id:23},
+        {j:'立つ', r:'たつ', e:'to stand up', id:24},
+        {j:'たばこを吸う', r:'たばこをすう', e:'to smoke', id:25},
+        {j:'使う', r:'つかう', e:'to use (~を)', id:26},
+        {j:'手伝う', r:'てつだう', e:'to help (person/taskを)', id:27},
+        {j:'入る', r:'はいる', e:'to enter (~に)', id:28},
+        {j:'持つ', r:'もつ', e:'to carry; to hold (~を)', id:29},
+        {j:'休む', r:'やすむ', e:'(1) to be absent (from...) (~を) (2) to rest', id:30},
+        {j:'開ける', r:'あける', e:'to open (something)', id:31},
+        {j:'閉める', r:'しめる', e:'to close (something)', id:32},
+        {j:'教える', r:'おしえる', e:'to teach; to instruct', id:33},
+        {j:'忘れる', r:'わすれる', e:'to forget', id:34},
+        {j:'降りる', r:'おりる', e:'to get off (from a vehicle)', id:35},
+        {j:'シャワーを浴びる', r:'しゃわぁをあびる', e:'to take a shower', id:36},
+        {j:'点ける', r:'つける', e:'to turn on (something)', id:37},
+        {j:'電話をする', r:'でんわをする', e:'to phone someone', id:38},
+        {j:'連れてくる', r:'つれてくる', e:'to bring (someone to come)', id:39},
+        {j:'持ってくる', r:'もってくる', e:'to bring (something to come)', id:40},
+        {j:'連れていく', r:'つれていく', e:'to take (someone to go)', id:41},
+        {j:'持っていく', r:'もっていく', e:'to take (something to go)', id:42},
+        {j:'後で', r:'あとで', e:'at a later time', id:43},
+        {j:'直ぐ', r:'すぐ', e:'right away', id:44},
+        {j:'ゆっくり', r:'ゆっくり', e:'slowly; leisurely; unhurriedly', id:45},
+        {j:'結構です', r:'けっこうです', e:"that would be fine; won't be necessary", id:46},
+        {j:'本当ですか', r:'ほんとうですか', e:'really?', id:47}
+    ]    
+}
+};
+
+let currentLessonKey = 'greetings'; // Default to the 'greetings' lesson
+let vocab = allLessons[currentLessonKey].data; // Global vocab variable
+
+/* --- MODIFIED: Initialize correctTracker and vocab data --- */
+let correctTracker; // Will be initialized in resetAll/startGame
+/* --------------------------------------------------------------------------- */
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+function normalizeEng(s){ return s.trim().toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim(); }
+
+/* --- populate vocab list tab --- */
+function renderVocabList(){
+  const target = $('#vocabList'); target.innerHTML='';
+  vocab.forEach((w,i)=>{
+    const row = document.createElement('div'); row.className='vocab-row';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-size:20px">${w.j} <span style="font-size:12px;color:var(--muted)">(${w.r})</span></div><div style="font-size:15px;color:var(--muted)">${w.e}</div>`;
+    const btn = document.createElement('button'); btn.className='btn'; btn.textContent='🔊';
+    btn.addEventListener('click', ()=> speak(w.r));
+    row.appendChild(left); row.appendChild(btn); target.appendChild(row);
+  });
+  $('#vocabListTitle').textContent = `Vocabulary — ${allLessons[currentLessonKey].title}`;
+}
+
+/* --- Flashcards --- */
+let flashOrder = shuffle([...vocab]);
+let flashIndex = 0;
+function showFlash(){
+  if(flashOrder.length===0) flashOrder = shuffle([...vocab]);
+  const w = flashOrder[flashIndex % flashOrder.length];
+  $('#flashJP').textContent = w.j;
+  $('#flashReading').textContent = `(${w.r})`;
+  $('#flashEN').textContent = w.e;
+}
+$('#nextFlash').addEventListener('click', ()=>{ flashIndex=(flashIndex+1)%flashOrder.length; showFlash(); });
+$('#prevFlash').addEventListener('click', ()=>{ flashIndex=(flashIndex-1+flashOrder.length)%flashOrder.length; showFlash(); });
+$('#shuffleFlash').addEventListener('click', ()=>{ flashOrder = shuffle([...vocab]); flashIndex = 0; showFlash(); });
+$('#hearFlash').addEventListener('click', ()=>{ speak(flashOrder[flashIndex%flashOrder.length].r); });
+
+
+/* --- Tabs wiring --- */
+$$('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tab = btn.dataset.tab;
+    ['vocab','flash','game'].forEach(t=> document.getElementById(t).style.display = (t===tab ? 'block' : 'none'));
+    $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+$('#openFlash').addEventListener('click', ()=>{ $('#vocab').style.display='none'; $('#flash').style.display='block'; $('#game').style.display='none'; $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-btn').find?.(b=>b.dataset.tab==='flash')?.classList.add('active'); });
+$('#openGame').addEventListener('click', ()=>{ $('#vocab').style.display='none'; $('#flash').style.display='none'; $('#game').style.display='block'; $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-btn').find?.(b=>b.dataset.tab==='game')?.classList.add('active'); });
+$('#openVocabTab').addEventListener('click', ()=>{ $('#vocab').style.display='block'; $('#flash').style.display='none'; $('#game').style.display='none'; $$('.tab-btn').forEach(b=>b.classList.remove('active')); $$('.tab-btn').find?.(b=>b.dataset.tab==='vocab')?.classList.add('active'); });
+
+
+/* --- Lesson Selector Logic --- */
+function initLessons(){
+    const select = $('#lessonSelect');
+    select.innerHTML = '';
+    Object.entries(allLessons).forEach(([key, lesson]) => {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = lesson.title;
+        select.appendChild(option);
+    });
+
+    select.value = currentLessonKey; // Set initial selection
+    
+    // --- MODIFIED: Added speech to the event listener ---
+    select.addEventListener('change', (e) => {
+        const key = e.target.value;
+        loadLesson(key);
+        // Announce the selected lesson title in Japanese
+        const speechTitle = allLessons[key].title.replace(/\s*\(.*\)/, '');
+        speak(speechTitle + 'をせんたくしました。');
+    });
+    // --- END MODIFIED ---
+    
+    loadLesson(currentLessonKey); // Load the initial lesson without speaking
+}
+
+function loadLesson(key){
+    currentLessonKey = key;
+    vocab = allLessons[key].data;
+    
+    // Update UI
+    const title = allLessons[key].title;
+    $('#lessonTitle').textContent = `Piled Falling Vocab Game: ${title}`;
+    $('#appTitle').textContent = `Puyo-style Falling Vocab Game: ${title}`;
+    $('#gameLessonTitle').textContent = title;
+
+    // Reset game state and reload content
+    resetAll();
+    renderVocabList();
+    flashOrder = shuffle([...vocab]);
+    flashIndex = 0;
+    showFlash();
+    updateHUD();
+}
+/* --- END Lesson Selector Logic --- */
+
+
+/* --- Game: pile configuration --- */
+const cols = 8; // number of columns for stacking
+const maxRows = 4; // number rows (height) before game over (with medium blocks)
+const colGap = -2;
+const pileGrid = $('#pileGrid');
+const gameArea = $('#gameArea');
+let columns = []; // arrays of stacked blocks per column
+
+function initColumns(){
+  columns = [];
+  pileGrid.innerHTML = '';
+  const areaW = gameArea.clientWidth;
+  /* 2. JS COLUMN SPACING */
+  const colWidth = 125 + colGap; // 125px is the block width (120) plus internal padding (5)
+  const totalWidth = cols * colWidth - colGap;
+  const left = (gameArea.clientWidth - totalWidth)/2;
+  for(let c=0;c<cols;c++){
+    const col = document.createElement('div');
+    col.className = 'pile-column';
+    col.style.left = (left + c*colWidth) + 'px';
+    /* 3. JS COLUMN CONTAINER WIDTH */
+    col.style.width = '125px'; // Sets the container width for 120px block + 5px buffer
+    col.dataset.index = c;
+    pileGrid.appendChild(col);
+    columns.push([]);
+  }
+}
+initColumns();
+window.addEventListener('resize', ()=> initColumns());
+
+/* game state */
+let running=false;
+let spawnTimer=null;
+let currentWord=null;
+let nextWord=null;
+let score=0, lives=maxRows, streak=0;
+let fallSpeedMult = 1.0; // speed select
+let paused=false;
+
+// TIMER STATE VARIABLES
+let countdownInterval = null;
+let timeLeft = 5;
+const TIME_PER_WORD = 5; // Base time allowed per word
+
+/* helper to pick next word (looping) */
+let vocabQueue = shuffle([...vocab]);
+function pickNext(){
+  if(vocabQueue.length===0) vocabQueue = shuffle([...vocab]);
+  return vocabQueue.shift();
+}
+
+/* render answer buttons (responsive) */
+function renderOptionsFor(word){
+  const area = $('#answerArea'); area.innerHTML='';
+  const correct = word.e;
+  const others = shuffle(vocab.filter(v=>v.e !== correct)).slice(0,3).map(x=>x.e);
+  const options = shuffle([correct, ...others]);
+  const narrow = window.innerWidth < 700;
+  if(narrow){
+    const grid = document.createElement('div'); grid.className = 'choice-grid';
+    options.forEach(opt=>{
+      const b = document.createElement('button'); b.className='choice-btn'; b.textContent = opt;
+      b.addEventListener('click', ()=> handleChoice(b,opt));
+      grid.appendChild(b);
+    });
+    area.appendChild(grid);
+  } else {
+    options.forEach(opt=>{
+      const b = document.createElement('button'); b.className='choice-btn'; b.textContent = opt;
+      b.style.flex = '1';
+      b.addEventListener('click', ()=> handleChoice(b,opt));
+      area.appendChild(b);
+    });
+  }
+}
+
+/* show preview */
+function updatePreview(){
+  if(!nextWord){ $('#pvContent').textContent = ''; $('#preview').textContent = ''; return; }
+  $('#pvContent').textContent = `${nextWord.j} (${nextWord.r}) — ${nextWord.e}`;
+  $('#preview').textContent = `${nextWord.j} (${nextWord.r})`;
+}
+
+/* spawn flow */
+function spawnNext(){
+  if(countdownInterval) clearInterval(countdownInterval); // Stop any existing timer
+  currentWord = nextWord || pickNext();
+  nextWord = pickNext();
+  updatePreview();
+  renderFallingCard(currentWord);
+  renderOptionsFor(currentWord);
+  startCountdown(); // Start the new countdown
+}
+
+/* render falling card visual (top area) */
+function renderFallingCard(word){
+  // create a visual floating element (not stacked) that indicates the active falling word
+  removeFloating();
+  /* 4. JS FALLING CARD CENTERING: half of 120px is 60px */
+  const el = document.createElement('div'); el.className='block jp'; el.style.position='absolute'; el.style.left = (gameArea.clientWidth/2 - 60) + 'px'; el.style.top='12px'; 
+  el.innerHTML = `<div style="font-size:20px">${word.j}</div><div style="font-size:14px;color:var(--muted);margin-top:6px">${word.r}</div>`;
+  el.id = 'floating';
+  gameArea.appendChild(el);
+}
+
+/* remove floating */
+function removeFloating(){
+  const f = $('#floating'); if(f && f.parentNode) f.parentNode.removeChild(f);
+}
+
+// REDEMPTION MECHANIC
+function removeFromPile(word) {
+  let blocksRemoved = 0;
+  // Use the unique Japanese word (j) to find matching blocks in the pile
+  const targetJp = word.j; 
+
+  for (let c = 0; c < columns.length; c++) {
+    // Filter the column to keep only blocks that *do not* match the target
+    const newCol = columns[c].filter(obj => {
+      if (obj.word.j === targetJp) {
+        // This is a match, remove it from the DOM
+        if (obj.node && obj.node.parentNode) {
+          obj.node.parentNode.removeChild(obj.node);
+          blocksRemoved++;
+        }
+        return false; // Exclude from newCol
+      }
+      return true; // Keep in newCol
+    });
+    columns[c] = newCol;
+  }
+  
+  if (blocksRemoved > 0) {
+    // Award 5 points for each block cleared
+    score += (blocksRemoved * 5); 
+    // Recalculate lives and update HUD
+    lives = Math.max(0, maxRows - Math.max(...columns.map(c=>c.length)));
+    updateHUD();
+    flashSuccess();
+  }
+}
+
+/* handle correct / wrong selection */
+function handleChoice(buttonEl, chosen){
+  if(!currentWord) return;
+
+  // STOP THE COUNTDOWN IMMEDIAITELY UPON CHOICE
+  if(countdownInterval) clearInterval(countdownInterval);
+
+  const correct = chosen === currentWord.e;
+  const allButtons = $('#answerArea').querySelectorAll('.choice-btn');
+  allButtons.forEach(b=>b.disabled=true);
+  
+  // Find the index of the current word in the active vocab list for the tracker
+  const currentWordIndex = vocab.findIndex(w => w.j === currentWord.j && w.r === currentWord.r);
+
+  if(correct){
+    buttonEl.classList.add('correct');
+    
+    // Update correctTracker and check for win
+    if (currentWordIndex !== -1) {
+        correctTracker[currentWordIndex] = true;
+    }
+    const allCorrect = correctTracker.every(t => t);
+    
+    // play audio
+    speak(currentWord.r);
+    // clear floating and award points
+    setTimeout(()=> {
+      buttonEl.classList.remove('correct');
+      score += 10 + Math.floor(streak*2);
+      streak++;
+      
+      // CALL THE REDEMPTION FUNCTION
+      removeFromPile(currentWord); 
+      
+      updateHUD();
+      removeFloating();
+      
+      // Check for win condition
+      if (allCorrect) {
+        winGame();
+        return;
+      }
+
+      // spawn next after short delay
+      currentWord = null;
+      setTimeout(()=>{ if(running) spawnNext(); }, 450);
+    }, 420);
+  } else {
+    buttonEl.classList.add('wrong');
+    // animate floating falling into a column
+    streak = 0; updateHUD();
+    animatePlaceIntoPile(currentWord).then(()=> {
+      // after placement, clear floating and spawn next
+      buttonEl.classList.remove('wrong');
+      currentWord = null;
+      setTimeout(()=>{ if(running) spawnNext(); }, 420);
+    });
+  }
+}
+
+/* animate placement into pile (slow fall) */
+function animatePlaceIntoPile(word){
+  return new Promise(resolve=>{
+    // choose column with least height (to be fair)
+    const heights = columns.map(col=>col.length);
+    let min = Math.min(...heights);
+    // prefer columns with min height, random among them
+    const candidates = heights.map((h,i)=> h===min ? i : -1).filter(i=>i>=0);
+    let colIndex = candidates.length ? candidates[Math.floor(Math.random()*candidates.length)] : Math.floor(Math.random()*cols);
+    // create block element that will animate from floating position to column stack position
+    const floating = $('#floating');
+    if(!floating){ resolve(); return; }
+    const rectStart = floating.getBoundingClientRect();
+    // compute destination position (column container bottom + offset)
+    const colEl = pileGrid.children[colIndex];
+    const targetX = parseFloat(colEl.style.left) + 0; // left within gameArea coordinate
+    
+    /* --- MODIFIED: Adjusted blockVisualHeight based on 100px height --- */
+    const blockVisualHeight = 100 + 6; // Block height (100px) + gap (6px). 
+    const destY = gameArea.clientHeight - 8 - ((columns[colIndex].length+1) * blockVisualHeight); // bottom minus stack
+    
+    // create anim element
+    const anim = document.createElement('div'); anim.className='block fail';
+    anim.style.position = 'absolute';
+    // Calculate initial position relative to gameArea
+    const gameAreaRect = gameArea.getBoundingClientRect();
+    anim.style.left = rectStart.left - gameAreaRect.left + 'px';
+    anim.style.top = rectStart.top - gameAreaRect.top + 'px';
+    
+    /* 5. JS ANIMATION WIDTH */
+    anim.style.width = '120px'; // Match block width. 
+    anim.style.height = '100px'; // Height remains the same.
+    /* -------------------------------------------------------------------------- */
+    
+    anim.innerHTML = `<div style="font-size:20px">${word.j}</div><div style="font-size:15px;color:var(--muted);margin-top:4px">${word.r}</div>`;
+    gameArea.appendChild(anim);
+    
+    // Animate down & sideways
+    const duration = (speedMultiplier()*800) + 300; 
+    const start = performance.now();
+    const fromX = parseFloat(anim.style.left);
+    const fromY = parseFloat(anim.style.top);
+    const toX = targetX;
+    const toY = destY;
+
+    function frame(now){
+      const t = Math.min(1, (now - start) / duration);
+      // smooth step easing function
+      const eased = t<0.5? 2*t*t : -1 + (4-2*t)*t; 
+      anim.style.left = (fromX + (toX - fromX) * eased) + 'px';
+      anim.style.top = (fromY + (toY - fromY) * eased) + 'px';
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        // placement logic
+        const block = document.createElement('div'); block.className='block jp';
+        block.innerHTML = `<div style="font-size:20px">${word.j}</div><div style="font-size:15px;color:var(--muted);margin-top:4px">${word.r}</div>`;
+        
+        columns[colIndex].push({word, node:block});
+        pileGrid.children[colIndex].appendChild(block);
+        
+        if(anim.parentNode) anim.parentNode.removeChild(anim);
+        removeFloating();
+        
+        // update lives
+        lives = Math.max(0, maxRows - Math.max(...columns.map(c=>c.length)));
+        updateHUD();
+        flashFail();
+        
+        // check game over
+        if(columns.some(c=>c.length >= maxRows)){
+          endGame();
+        }
+        resolve();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
+
+/* utilities */
+function speedMultiplier(){
+  const v = $('#speedSelect').value;
+  if(v==='slow') return 1.35;
+  if(v==='normal') return 1.0;
+  if(v==='fast') return 0.72;
+  return 0.55; // veryfast
+}
+
+function getTimeLimit(){
+  // Time limit is shorter (faster) on faster speed settings
+  return Math.round(TIME_PER_WORD * speedMultiplier());
+}
+
+/* UI updates */
+function updateHUD(){
+  $('#score').textContent = score;
+  // Update progress based on the current active vocab list
+  const correctCount = correctTracker ? correctTracker.filter(t => t).length : 0;
+  $('#lives').textContent = `${Math.max(0, maxRows - Math.max(...columns.map(c=>c.length)))} (${correctCount}/${vocab.length})`;
+  $('#streak').textContent = streak;
+
+  // TIMER DISPLAY LOGIC
+  const timerEl = $('#timerDisplay');
+  timerEl.textContent = `${timeLeft}s`;
+  timerEl.classList.toggle('low', timeLeft <= 3);
+}
+
+// TIMER LOGIC
+function startCountdown(){
+  if(countdownInterval) clearInterval(countdownInterval);
+  timeLeft = getTimeLimit(); // Set time based on speed setting
+  updateHUD();
+
+  countdownInterval = setInterval(()=>{
+    if(!running || paused) {
+      clearInterval(countdownInterval);
+      return;
+    }
+    timeLeft--;
+    updateHUD();
+
+    if(timeLeft <= 0){
+      clearInterval(countdownInterval);
+      if(currentWord) {
+        // Handle Timeout as a wrong answer
+        $('#answerArea').querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+        streak = 0; updateHUD();
+        animatePlaceIntoPile(currentWord).then(()=> {
+          currentWord = null;
+          setTimeout(()=>{ if(running) spawnNext(); }, 420);
+        });
+      } else {
+        // If somehow word is null, just spawn the next one.
+        spawnNext();
+      }
+    }
+  }, 1000);
+}
+
+
+/* game start / pause / reset */
+function startGame(){
+  if(running) return;
+
+  if(countdownInterval) clearInterval(countdownInterval); // Ensure previous timer is cleared
+  initColumns();
+  running = true; paused=false; score=0; streak=0;
+  // Reset correctTracker based on the current active vocab list size
+  correctTracker = new Array(vocab.length).fill(false);
+  vocabQueue = shuffle([...vocab]);
+  currentWord = null; nextWord = pickNext();
+  updateHUD();
+  spawnNext();
+}
+
+function pauseGame(){
+  paused = !paused;
+  $('#pauseBtn').textContent = paused ? 'Resume' : 'Pause';
+  running = !paused;
+
+  // Pause or Resume the interval
+  if(paused){
+    if(countdownInterval) clearInterval(countdownInterval);
+  } else {
+    // Resume immediately by restarting the countdown (at the current timeLeft)
+    startCountdown(); 
+  }
+}
+
+function resetAll(){
+  running=false; paused=false; $('#pauseBtn').textContent='Pause';
+  if(countdownInterval) clearInterval(countdownInterval); // Clear interval on reset
+  // clear pile
+  initColumns();
+  ['#floating'].forEach(id=>{ const el = $(id); if(el && el.parentNode) el.parentNode.removeChild(el); });
+  $('#answerArea').innerHTML = '';
+  $('#pvContent').textContent = '';
+  $('#preview').textContent = '';
+  score=0; streak=0;
+  // Reset correctTracker on full reset
+  correctTracker = new Array(vocab.length).fill(false);
+  updateHUD();
+}
+
+/* end game */
+function endGame(){
+  running=false;
+  if(countdownInterval) clearInterval(countdownInterval); // Stop timer when game is over
+  // overlay
+  const overlay = document.createElement('div'); overlay.style.position='absolute'; overlay.style.inset='0'; overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center'; overlay.style.background='linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.45))';
+  overlay.innerHTML = `<div style="background:#fff;padding:18px;border-radius:10px;border:1px solid rgba(3,59,73,0.06);text-align:center;color:#04202a"><h2 style="margin:0 0 8px 0">Game Over</h2><div style="margin-bottom:8px">Score: ${score}</div><button id="restartBtn" class="btn">Restart</button></div>`;
+  document.querySelector('#game .card').appendChild(overlay);
+  $('#restartBtn').addEventListener('click', ()=>{ overlay.remove(); resetAll(); startGame(); });
+}
+
+// WIN GAME FUNCTION
+function winGame(){
+  running=false;
+  if(countdownInterval) clearInterval(countdownInterval);
+  const overlay = document.createElement('div'); overlay.style.position='absolute'; overlay.style.inset='0'; overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center'; overlay.style.background='linear-gradient(180deg,rgba(0,0,0,0.35),rgba(0,0,0,0.45))';
+  overlay.innerHTML = `<div style="background:#fff;padding:24px;border-radius:10px;border:1px solid rgba(16,185,129,0.8);text-align:center;color:#04202a;box-shadow: 0 10px 30px rgba(16,185,129,0.2)"><h2 style="margin:0 0 12px 0;color:var(--good)">🎉 Victory! All Words Learned!</h2><div style="margin-bottom:12px;font-size:18px">Final Score: <strong>${score}</strong></div><button id="restartBtn" class="btn" style="background:var(--good);border-color:var(--good);color:white">Play Again</button></div>`;
+  document.querySelector('#game .card').appendChild(overlay);
+  $('#restartBtn').addEventListener('click', ()=>{ overlay.remove(); resetAll(); startGame(); });
+}
+
+/* visual fail flash */
+function flashFail(){
+  const f = document.createElement('div'); f.className='flash-fail'; gameArea.appendChild(f);
+  setTimeout(()=>{ if(f.parentNode) f.parentNode.removeChild(f); }, 420);
+}
+
+// VISUAL SUCCESS FLASH
+function flashSuccess(){
+  const f = document.createElement('div'); f.className='flash-success'; gameArea.appendChild(f);
+  setTimeout(()=>{ if(f.parentNode) f.parentNode.removeChild(f); }, 420);
+}
+
+
+/* speech */
+function speak(text){
+  if(!text) return;
+  if('speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+   if (selectedVoice) {
+  u.voice = selectedVoice;
+}
+    u.lang = 'ja-JP';
+    u.rate = speechRate;
+    u.volume = 1.0;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+}
+
+/* end-of-life wiring */
+$('#startBtn').addEventListener('click', ()=>{ resetAll(); startGame(); });
+$('#pauseBtn').addEventListener('click', ()=>{ pauseGame(); });
+$('#resetBtn').addEventListener('click', ()=>{ resetAll(); });
+
+$('#speedSelect').addEventListener('change', ()=>{ 
+  // If the game is running, immediately adjust the timer logic to the new speed
+  if(running && !paused && currentWord){
+    // Reset timer to the new time limit based on speed
+    startCountdown(); 
+  }
+});
+
+window.addEventListener('resize', ()=>{ initColumns(); if(currentWord) renderOptionsFor(currentWord); });
+
+/* initial setup */
+initLessons(); // Initialize and load the default lesson ('greetings')
+updateHUD();
+function loadVoices() {
+  const voiceSelect = document.getElementById("voiceSelect");
+  const voices = speechSynthesis.getVoices();
+
+  // Filter Japanese voices (Chrome usually has 2–4)
+  const jpVoices = voices.filter(v => v.lang.includes("ja"));
+
+  // Clear menu
+  voiceSelect.innerHTML = "";
+
+  // Add each Japanese voice
+  jpVoices.forEach((v, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${v.name} (${v.lang})`;
+    voiceSelect.appendChild(opt);
+  });
+
+  // Default to first Japanese voice
+  if (jpVoices.length > 0) {
+    selectedVoice = jpVoices[0];
+  }
+
+  // Update selectedVoice when user changes dropdown
+  voiceSelect.addEventListener("change", () => {
+    selectedVoice = jpVoices[voiceSelect.value];
+  });
+}
+
+// Voices sometimes load slowly — call twice
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
+
+</script>
+</body>
+</html>

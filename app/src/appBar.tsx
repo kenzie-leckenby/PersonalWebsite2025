@@ -26,7 +26,7 @@ function WebsiteIcon() {
 
 const menuItems = [
   {name: 'Blog', link: '/blog'},
-  {name: 'Projects', link: '/projects'}
+  {name: 'Japanese Resources', link: '/japanese-resources'}
 ];
 
 function DropDownMenu() {
