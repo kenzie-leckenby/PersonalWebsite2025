@@ -10,7 +10,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
-  const filePath = path.join(process.cwd(), "app/japanese-resources-htmls", `${params.slug}.html`);
+  const filePath = path.join(process.cwd(), "public", "japanese-resources-htmls", `${params.slug}.html`);
   await fs.access(filePath);
 
   return { slug};
@@ -22,12 +22,11 @@ export default function ResourcePage() {
   return (
     <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }} disableGutters>
       <iframe
-        src={`/japanese-resources/${slug}.html`}
+        src={`/japanese-resources-htmls/${slug}.html`}
         style={{
           width: "100%",
-          height: "90vh",
+          height: "100%",
           border: "none",
-          background: "white",
         }}
       />
     </Container>
