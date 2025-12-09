@@ -13,6 +13,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
   const filePath = path.join(process.cwd(), "public", "japanese-resources-htmls", `${params.slug}.html`);
   await fs.access(filePath);
 
+  try {
+    await fs.access(filePath);
+  } catch {
+    throw new Response("Not found", { status: 404 });
+  }
+
   return { slug};
 }
 
@@ -25,7 +31,7 @@ export default function ResourcePage() {
         src={`/japanese-resources-htmls/${slug}.html`}
         style={{
           width: "100%",
-          height: "100%",
+          height: "90vh",
           border: "none",
         }}
       />

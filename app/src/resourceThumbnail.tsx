@@ -5,11 +5,10 @@ import darkTheme from './theme';
 
 interface ResourceThumbnailProps {
     title: string;
-    synopsis: string;
     link: string;
 }
 
-const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, link }) => {
+const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, link }) => {
     return (
       <Box
         component={Link}
@@ -19,6 +18,7 @@ const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, 
           border: `1px solid ${darkTheme.palette.divider}`,
           borderRadius: '8px',
           padding: 2,
+          marginBottom: 1,
           backgroundColor: darkTheme.palette.background.paper,
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
           transition: 'transform 0.2s ease-in-out',
@@ -34,11 +34,6 @@ const ResourceThumbnail: React.FC<ResourceThumbnailProps> = ({ title, synopsis, 
         {/* Resource Title */}
         <Typography variant="h5" sx={{ fontWeight: 'bold', color: darkTheme.palette.primary.main }}>
           {title}
-        </Typography>
-
-        {/* Resource Synopsis */}
-        <Typography variant="body2" sx={{ color: darkTheme.palette.text.primary }}>
-          {synopsis}
         </Typography>
       </Box>
     );
